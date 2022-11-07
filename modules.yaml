@@ -1,0 +1,41 @@
+modules:
+    workshop-overview:
+        name: Easily Build Cloud Native Supply Chains
+        exit_sign: Supply Chain
+    exercises/supply-chain:
+        name: ClusterSupplyChain
+        exit_sign: Workload
+    exercises/workload:
+        name: Workload
+        exit_sign: Source Template
+    exercises/source-template:
+        name: ClusterSourceTemplate
+        exit_sign: Image Template
+    exercises/image-template:
+        name: ClusterImageTemplate
+        exit_sign: Config Template
+    exercises/config-template:
+        name: ClusterConfigTemplate
+        exit_sign: Template
+    exercises/template: 
+        name:  ClusterTemplate
+        exit_sign: Runnable
+    exercises/runnable:
+        name: Runnable and ClusterRunTemplate
+        exit_sign: Delivery
+    exercises/delivery:
+        name: Deliverable, ClusterDelivery, ClusterDeploymentTemplate
+        exit_sign: OOTB SCs
+    exercises/sc-ootb:
+        name: Out of the Box Supply Chains
+        exit_sign: Custom SC - p1
+    exercises/custom-sc:
+        name: Building a custom Supply Chain
+        exit_sign: Custom SC - p2
+    exercises/custom-sc-p2:
+        name: Customize OOTB Supply Chain
+        exit_sign: Summary
+    workshop-summary:
+        name: Workshop Summary
+        exit_sign: Finish Workshop  
+        
