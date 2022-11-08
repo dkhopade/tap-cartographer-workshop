@@ -56,7 +56,7 @@ text: |2
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
-
+      end2end.link/is-custom: "true"
     resources:
     - name: source-provider
       templateRef:
