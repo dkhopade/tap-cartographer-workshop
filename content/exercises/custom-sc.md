@@ -422,7 +422,7 @@ clear: true
 ```
 To test it we last but not least have to create a **matching Workload**, ...
 ```editor:append-lines-to-file
-file: workload-custom-sc.yaml
+file: ~/workload-docker.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: Workload
@@ -444,7 +444,7 @@ text: |2
 ... apply it, ...
 ```terminal:execute
 command: |
-  kubectl apply -f workload-custom-sc.yaml
+  kubectl apply -f ~/workload-docker.yaml
 clear: true
 ```
 ... and then we are able to see via the commercial Supply Chain Choreographer UI plugin and the following commands whether everything works as expected.
@@ -473,7 +473,7 @@ That's it! You have built your first custom supply chain, and hopefully, many mo
 Let's delete the resources that we applied to the cluster.
 ```terminal:execute
 command: |
-  kubectl delete -f workload-custom-sc.yaml
+  kubectl delete -f ~/workload-docker.yaml
   kapp delete -a custom-supply-chain -y
 clear: true
 ```

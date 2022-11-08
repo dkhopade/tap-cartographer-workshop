@@ -2,7 +2,7 @@ Let us take a look at what it takes to add the capabilites of Testing and Scanni
 
 The easiest way to get started with building a custom supply chain is to copy one of the out-of-the-box supply chains from the cluster, change the `metadata.name`, and add a unique selector by e.g. adding a label to the `spec.selector` configuration.
 
-For this part of the exercise, we will reuse some of the OOTB templates discover the two ways of providing and modifying a template.
+For this part of the exercise, we will reuse some of the OOTB templates and discover the ways of providing and modifying a template.
 
 We will leverage a Kubernetes native CI/CD solution like Tekton to do the job, which is part of TAP distribution.
 
@@ -33,10 +33,12 @@ text: |2
     name: custom-supplychain-{{ session_namespace }}
     labels:
       apps.tanzu.vmware.com/workload-type: web
+      end2end.link/is-custom: "true"
       end2end.link/workshop-session: {{ session_namespace }}
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
+      end2end.link/is-custom: "true"
     params:
     - name: maven_repository_url
       value: https://repo.maven.apache.org/maven2
@@ -203,7 +205,7 @@ As with our custom supply chain, the **next step** is responsible for the buildi
 
 #### ClusterImageTemplate - Kaniko Image Builder
 
-In addition to `kpack`, with our custom supply chain we want to provide a solution that builds a container image based on a `Dockerfile`. 
+In addition to `kpack`, we want our custom supply chain to provide a solution that builds a container image based on a `Dockerfile`. 
 
 **[kaniko](https://github.com/GoogleContainerTools/kaniko)** is the solution we'll use for it. It's a tool to build container images from a Dockerfile, inside a container or Kubernetes cluster. 
 
@@ -217,7 +219,6 @@ text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterImageTemplate
   metadata:
-    labels:
     name: custom-image-kaniko-template-{{ session_namespace }}
   spec:
     healthRule:
@@ -272,11 +273,11 @@ text: |2
       #@   return param("registry")["ca_cert_data"]
       #@ end
 ```
-##### Add Kaniko ClusterImageTemplate to the Supply Chain
+##### Create Kaniko ClusterImageTemplate to the Supply Chain
 
-We want to implement it in a way that the different implementations (kpack and kaniko) will be switched based on a selector - in this case, whether the `dockerfile` parameter in the Workload is set or not.
+We want to implement in a way that both **kpack** and **kaniko** methods can be used in a single supply chain. These will be switched based on a `selector` - in our case, the selector will test to see if `dockerfile` parameter in the `Workload` is set or not.
 
-We will use this one `kpack-template` thats deployed by OOTB
+We will use this one `kaniko-template` that is provided as part of OOTB templates package.
 
 ```editor:select-matching-text
 file: custom-supply-chain/supply-chain.yaml
@@ -307,8 +308,8 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.services.demo.jg-aws.com
-          repository: tap-workshop-workloads
+          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
+          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
       - name: dockerfile
         default: ""
 ```
@@ -949,8 +950,8 @@ text: |2
       - name: registry
         value:
           ca_cert_data: ""
-          repository: tap-workshop-workloads
-          server: harbor.services.demo.jg-aws.com
+          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
+          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
       templateRef:
         kind: ClusterTemplate
         name: custom-config-writer-template-{{ session_namespace }}
@@ -1118,30 +1119,35 @@ text: |2
       - name: registry
         value:
           ca_cert_data: ""
-          repository: tap-workshop-workloads
-          server: harbor.services.demo.jg-aws.com
+          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
+          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
       templateRef:
         kind: ClusterTemplate
         name: custom-deliverable-template-{{ session_namespace }}
 ```
+
 
 We are now able to apply our custom supply chain to the cluster.
 ```terminal:execute
 command: kapp deploy -a custom-supply-chain -f custom-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
 clear: true
 ```
-To test it we last but not least have to create a **matching Workload**, ...
+##### Deploy Workload
+
+To test the supply chain with `Dockerfile` capability let's create a new `Workload` from previously created `tanzu-java-web-app` with a few more details.
+
 ```editor:append-lines-to-file
-file: workloads/workload-custom-sc.yaml
+file: ~/workloads/workload-docker.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: Workload
   metadata:
     labels:
-      app.kubernetes.io/part-of: app-with-custom-supply-chain
+      app.kubernetes.io/part-of: tanzu-java-web-app-docker
       apps.tanzu.vmware.com/workload-type: web
       end2end.link/workshop-session: {{ session_namespace }}
-    name: app-with-custom-supply-chain
+      end2end.link/is-custom: "true" 
+    name: tanzu-java-web-app-docker
   spec:
     params:
     - name: dockerfile
@@ -1152,44 +1158,61 @@ text: |2
           branch: dockerfile
         url: https://github.com/sample-accelerators/tanzu-java-web-app.git
 ```
-... apply it, ...
+
+Here we made a few changes `Workload`. Since we want to deploy using `Dockerfile` we need to specify that in `spec.params` 
+
+```editor:select-matching-text
+file: ~/workloads/workload-docker.yaml
+text: "spec:"
+before: 0
+after: 3
+```
+
+We also update the git source to a branch of the **tanzu-java-web-app** where we added a simple `Dockerfile`
+
+```editor:select-matching-text
+file: ~/workloads/workload-docker.yaml
+text: "branch: dockerfile"
+```
+
+Next, let's apply the workload
 ```terminal:execute
 command: |
-  kubectl apply -f workloads/workload-custom-sc.yaml
+  kubectl apply -f ~/workloads/workload-docker.yaml
 clear: true
 ```
 ... and then we are able to see via the commercial Supply Chain Choreographer UI plugin and the following commands whether everything works as expected.
 
 ```dashboard:reload-dashboard
 name: TAP Gui for Supply Chain
-url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/host/{{ session_namespace }}/app-with-custom-supply-chain
+url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/host/{{ session_namespace }}/tanzu-java-web-app-docker
 ```
 ```terminal:execute
 command: kubectl describe clustersupplychain custom-supplychain-{{ session_namespace }}
 clear: true
 ```
 ```terminal:execute
-command: kubectl tree workload app-with-custom-supply-chain
+command: kubectl tree workload tanzu-java-web-app-docker
 clear: true
 ```
 ```terminal:execute
-command: tanzu apps workload get app-with-custom-supply-chain
+command: tanzu apps workload get tanzu-java-web-app-docker
 clear: true
 ```
 ```execute-2
-tanzu apps workload tail app-with-custom-supply-chain
+tanzu apps workload tail tanzu-java-web-app-docker
 ```
 Now that we deployed our workload, let's confirm by going to the following URL
 ```dashboard:create-dashboard
-name: app-with-custom-supply-chain
-url: http://app-with-custom-supply-chain.{{ session_namespace }}.{{ ENV_TAP_INGRESS }}
+name: tanzu-java-web-app-docker
+url: http://tanzu-java-web-app-docker.{{ session_namespace }}.{{ ENV_TAP_INGRESS }}
 ```
 
 That's it! You have built your first custom supply chain, and hopefully, many more will follow.
 Let's delete the resources that we applied to the cluster.
 ```terminal:execute
 command: |
-  kubectl delete -f workload-custom-sc.yaml
+  kubectl delete -f ~/workload-docker.yaml
   kapp delete -a custom-supply-chain -y
 clear: true
 ```
