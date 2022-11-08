@@ -45,10 +45,8 @@ spec:
         url: https://cartographer.sh/docs/development/
       - name: TAP GUI
         url: #@ "http://tap-gui.{}/supply-chain/".format(data.values.tap.ingress_domain)
-      - name: Cartographer Live Editor
+      - name: Carto Live Editor
         url: https://cartographer.sh/live-editor/index.htm
-      - name: Supply Chain Choreographer for Tanzu
-        url: https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.2/tap/GUID-scc-about.html
     env: 
     - name: TAP_INGRESS
       value: #@ data.values.tap.ingress_domain
@@ -92,10 +90,6 @@ spec:
         kind: Role
         metadata:
           name: $(session_namespace)-default
-        #! rules:
-        #! - apiGroups: ["*"]
-        #!   resources: ["*"]
-        #!   verbs: ["*"]
         rules:
         - apiGroups:
           - source.toolkit.fluxcd.io
@@ -184,7 +178,6 @@ spec:
           - sourcescans
           verbs:
           - '*'
-        #! ---End of RBAC Rule ---
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
         metadata:

@@ -297,7 +297,7 @@ text: |2
             matchFields:
               - key: spec.params[?(@.name=="dockerfile")]
                 operator: DoesNotExist
-        - name: custom-image-kaniko-template-{{ session_workspace }} 
+        - name: custom-image-kaniko-template-{{ session_namespace }} 
           selector:
             matchFields:
               - key: spec.params[?(@.name=="dockerfile")]
@@ -308,8 +308,8 @@ text: |2
       params:
       - name: registry
         value:
-          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
-          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
+          server: {{ ENV_CONTAINER_REGISTRY_HOSTNAME }}
+          repository: {{ ENV_CONTAINER_REGISTRY_REPOSITORY }}
       - name: dockerfile
         default: ""
 ```
@@ -949,8 +949,8 @@ text: |2
       - name: registry
         value:
           ca_cert_data: ""
-          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
-          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
+          repository: {{ ENV_CONTAINER_REGISTRY_REPOSITORY }}
+          server: {{ ENV_CONTAINER_REGISTRY_HOSTNAME }}
       templateRef:
         kind: ClusterTemplate
         name: custom-config-writer-template-{{ session_namespace }}
@@ -1118,8 +1118,8 @@ text: |2
       - name: registry
         value:
           ca_cert_data: ""
-          repository: {{ CONTAINER_REGISTRY_REPOSITORY }}
-          server: {{ CONTAINER_REGISTRY_HOSTNAME }}
+          repository: {{ ENV_CONTAINER_REGISTRY_REPOSITORY }}
+          server: {{ ENV_CONTAINER_REGISTRY_HOSTNAME }}
       templateRef:
         kind: ClusterTemplate
         name: custom-deliverable-template-{{ session_namespace }}
@@ -1144,6 +1144,7 @@ text: |2
     labels:
       app.kubernetes.io/part-of: tanzu-java-web-app-docker
       apps.tanzu.vmware.com/workload-type: web
+      apps.tanzu.vmware.com/has-tests: "true"
       end2end.link/workshop-session: {{ session_namespace }}
       end2end.link/is-custom: "true" 
     name: tanzu-java-web-app-docker

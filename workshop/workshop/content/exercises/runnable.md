@@ -139,6 +139,9 @@ clear: true
 command: tanzu apps workload get tanzu-java-web-app
 clear: true
 ```
+Let's tail the `Workload` deployment to see the progress.
+**NOTE:** Press _CTRL+C_ before and after you click on the following link
+
 ```terminal:execute
 command: tanzu apps workload tail tanzu-java-web-app
 clear: true

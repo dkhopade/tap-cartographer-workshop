@@ -53,5 +53,3 @@ TAP provides a **full integration of all of its components via out of the box Su
 
 Let's now explore the two fundamental resources that an operator deploys, **Supply Chains** and **Templates**, and how these interact with the resource that a developer deploys, the **Workload**. 
 We'll do it in a hands-on session with an example of a simple supply chain that watches a Git repository for changes, builds a container image, and deploys it to the cluster.
-
-TODO: Add a basic workflow diagram here

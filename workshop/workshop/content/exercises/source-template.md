@@ -21,8 +21,7 @@ text: |2
     ytt: ""
 ```
 
-In TAP 1.2 we have the ability to detect the [**Health Status**](https://cartographer.sh/docs/v0.4.0/health-rules/) of the Supply Chain component. To accomplish that, we need to add `healthRule` spec to the respective component. We will be  adding for the rest of the components.
-This is possible via the `spec.healthRule`. The documentation is available here:
+In TAP 1.2 we have the ability to detect the [**Health Status**](https://cartographer.sh/docs/v0.4.0/health-rules/) of the Supply Chain component. To accomplish that, we need to add `spec.healthRule`, which we'll be adding through out the rest of the templates.
 
 ```editor:insert-value-into-yaml
 file: custom-supply-chain/custom-source-provider-template.yaml
@@ -50,11 +49,11 @@ There are **two options for templating**:
 - **ytt** for complex logic, such as conditionals or looping over collections (defined via `spec.ytt` in Templates).
 
 Both options for templating **provide a data structure** that contains:
-- Owner resource (Workload, Deliverable)
-- Inputs that are specified in the ClusterSupplyChain (or ClusterDelivery) for the template (sources, images, configs, deployments)
+- Owner resource `Workload` and `Deliverable`
+- Inputs that are specified in the `ClusterSupplyChain` or `ClusterDelivery` for the template `sources`, `images`, `configs`, `deployments`
 - Parameters
 
-**Hint:** Currently, there's only support to define and stamp-out **one** resource template **for each** Kubernetes (Custom) Resource. Additional resources **will not** be stamped out!
+**Hint:** Currently, there's only support to define and stamp-out **one** resource template **for each** Kubernetes Custom Resource (CRD). Additional resources **will not** be stamped out!
 
 For our first functionality, we will use a `ytt` and use the configuration provided by the Workload.
 ```editor:select-matching-text

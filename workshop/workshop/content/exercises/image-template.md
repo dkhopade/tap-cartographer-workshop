@@ -47,10 +47,10 @@ The ClusterImageTemplate requires the definition of a `spec.imagePath` with the 
 As you can already see, we will use the second option for templating now - ytt.
 
 As a Kubernetes native tool for container building, we will use **VMware Tanzu Build Service** that is based on the OSS **kpack**.
-You can have a closer look at the various configuration options of the relevant **Image** custom resource the solution provides here:
+You can have a closer look at the various configuration options of the relevant **Image** custom resource the solution provides [here](https://github.com/pivotal/kpack/blob/main/docs/image.md):
 ```dashboard:reload-dashboard
 name: Cartographer Docs
-url: https://github.com/pivotal/kpack/blob/main/docs/image.md
+url: 
 ```
 
 Let's add it to our ClusterImageTemplate resource.
