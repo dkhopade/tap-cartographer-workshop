@@ -3,16 +3,16 @@ Cartographer uses the **ClusterSupplyChain** custom resource to link the differe
 App operators can describe which "shape of applications" they deal with (via e.g. `spec.selector`) and what series of resources are responsible for creating an artifact that delivers it (via `spec.resources`).
 
 ```terminal:execute
-command: mkdir simple-supply-chain
+command: mkdir custom-supply-chain
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterSupplyChain
   metadata:
-    name: simple-supplychain-{{ session_namespace }}
+    name: custom-supplychain-{{ session_namespace }}
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}

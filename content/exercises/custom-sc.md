@@ -22,7 +22,6 @@ text: |2
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true"
     resources: []
 ```
 
@@ -175,7 +174,7 @@ text: |2
 
 We can reuse the relevant part of the simple supply chain for it.
 ```editor:open-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 line: 14
 ```
 But we want to implement in a way that the different implementations (kpack and kaniko) will be switched based on a selector - in this case, whether the `dockerfile` parameter in the Workload is set or not.
@@ -429,10 +428,9 @@ text: |2
   kind: Workload
   metadata:
     labels:
-      app.kubernetes.io/part-of: simple-python-app
+      app.kubernetes.io/part-of: custom-python-app
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true" 
-    name: simple-python-app
+    name: custom-python-app
   spec:
     params:
     - name: dockerfile
@@ -453,22 +451,22 @@ clear: true
 
 ```dashboard:reload-dashboard
 name: Cartographer Docs
-url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/simple-python-app
+url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/custom-python-app
 ```
 ```terminal:execute
 command: kubectl describe clustersupplychain custom-supplychain-{{ session_namespace }}
 clear: true
 ```
 ```terminal:execute
-command: kubectl tree workload simple-python-app
+command: kubectl tree workload custom-python-app
 clear: true
 ```
 ```terminal:execute
-command: kubectl describe workload simple-python-app
+command: kubectl describe workload custom-python-app
 clear: true
 ```
 ```execute-2
-tanzu apps workload tail simple-python-app
+tanzu apps workload tail custom-python-app
 ```
 
 That's it! You have built your first custom supply chain, and hopefully, many more will follow.

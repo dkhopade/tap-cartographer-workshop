@@ -1,18 +1,29 @@
+Let us take a look at what it takes to add the capabilites of Testing and Scanning to our supply chain.
 
 The easiest way to get started with building a custom supply chain is to copy one of the out-of-the-box supply chains from the cluster, change the `metadata.name`, and add a unique selector by e.g. adding a label to the `spec.selector` configuration.
 
-For this exercise, we will build one from scratch and discover the three ways of providing an implementation for a template:
-- Using a Kubernetes custom resource that is already available for the functionality we are looking for
-- Leverage a Kubernetes native CI/CD solution like Tekton to do the job, which is part of TAP
-- For more **complex and asynchronous functionalities**, one needs to **implement their own [Kubernetes Controller](https://kubernetes.io/docs/concepts/architecture/controller/)**. We will not be able to cover that in this workshop
+For this part of the exercise, we will reuse some of the OOTB templates discover the two ways of providing and modifying a template.
 
-You are invited to implement the custom supply chain yourself based on the information and basic templates which you have use to **avoid conflicts with other workshop sessions**. Due to the complexity, it's not part of the workshop as of right now to build a custom Kubernetes Controller, and therefore, we will just have a look at an example.
-You can make the solution for a specific step visible by clicking on the **Solution sections**.
+We will leverage a Kubernetes native CI/CD solution like Tekton to do the job, which is part of TAP distribution.
 
-Let's now start the implementation with the following supply chain skeleton.
-```terminal:execute
-command: mkdir custom-supply-chain
+Let's start by adding the necessary selectors. We will begin by adding the following mandatory selectors
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  selector:"
 ```
+Add `selector` to Supply Chain.
+```editor:replace-text-selection
+file: custom-supply-chain/supply-chain.yaml
+text: |2
+    selector:
+      apps.tanzu.vmware.com/has-tests: "true"
+      apps.tanzu.vmware.com/workload-type: web
+```
+
+**TODO:** Next we need to add the additional parameters 
+
+
 ```editor:append-lines-to-file
 file: custom-supply-chain/supply-chain.yaml
 text: |2
@@ -22,12 +33,10 @@ text: |2
     name: custom-supplychain-{{ session_namespace }}
     labels:
       apps.tanzu.vmware.com/workload-type: web
-      end2end.link/is-custom: "true"
       end2end.link/workshop-session: {{ session_namespace }}
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true"
     params:
     - name: maven_repository_url
       value: https://repo.maven.apache.org/maven2
@@ -43,132 +52,23 @@ text: |2
       name: gitops_ssh_secret  
     resources: []
 ```
-As with the other supply chains you already saw, the **first task** for our custom supply chain is also to **provide the latest version of a source code in a Git repository for subsequent steps**.
+
+**TODO: Endo of params
+
+As with the basic supply chains we just created, the **first task** for our custom supply chain is also to **provide the latest version of a source code in a Git repository for subsequent steps**.
 In the simple and ootb supply chains we used the [Flux](https://fluxcd.io) Source Controller for it. 
 
 The application then has to be packaged in a container, deployed to Kubernetes, and exposed to be reachable by the GitHub Webhook of a Git repository that also has to be configured - which is already done for you.
 
-Based on the provided information it's now your turn to implement the `ClusterSourceTemplate` and add it as the first resource to the ClusterSupplyChain.
-```editor:append-lines-to-file
+#### ClusterSourceTemplate - Workload GitRepo
+
+Based on the provided information we will reuse our existing `ClusterSourceTemplate` that we created a few minutes ago to get the workload app source code from Git repository.
+
+```editor:open-file
 file: custom-supply-chain/custom-source-provider-template.yaml
-text: |2
-  apiVersion: carto.run/v1alpha1
-  kind: ClusterSourceTemplate
-  metadata:
-    name: custom-source-provider-template-{{ session_namespace }}
-  spec:
-    urlPath: ""
-    revisionPath: ""
-    ytt: ""
-```
-In TAP 1.2 we have the ability to detect the **Health Status** of the Supply Chain component. To accomplish that, we need to add `healthRule` spec to the respective component. We will be  adding for the rest of the components.
-This is possible via the `spec.healthRule`. The documentation is available here:
-```dashboard:reload-dashboard
-name: Cartographer Docs
-url: https://cartographer.sh/docs/v0.4.0/health-rules/
-```
-```editor:append-lines-to-file
-file: custom-supply-chain/custom-source-provider-template.yaml
-text: |2
-    healthRule:
-      singleConditionType: Ready
 ```
 
-We will continue `ClusterSourceTemplate` in this below section. Click below tile to expand it first.
-
-```editor:select-matching-text
-file: custom-supply-chain/supply-chain.yaml
-text: "  resources: []"
-```
-Add `source-provider` to Supply Chain.
-```editor:replace-text-selection
-file: custom-supply-chain/supply-chain.yaml
-text: |2
-    resources:
-
-    - name: source-provider
-      params:
-      - name: serviceAccount
-        value: default
-      - name: gitImplementation
-        value: go-git
-      templateRef:
-        kind: ClusterSourceTemplate
-        name: custom-source-provider-template-{{ session_namespace }}
-```
-Replace the `ytt` with actual steps with adding a `GitRepository` kind.
-```editor:select-matching-text
-file: custom-supply-chain/custom-source-provider-template.yaml
-text: "  ytt: \"\""
-```
-```editor:replace-text-selection
-file: custom-supply-chain/custom-source-provider-template.yaml
-text: |2
-    ytt: |
-      #@ load("@ytt:data", "data")
-      #@ load("@ytt:yaml", "yaml")
-
-      #@ def merge_labels(fixed_values):
-      #@   labels = {}
-      #@   if hasattr(data.values.workload.metadata, "labels"):
-      #@     labels.update(data.values.workload.metadata.labels)
-      #@   end
-      #@   labels.update(fixed_values)
-      #@   return labels
-      #@ end
-
-      #@ def param(key):
-      #@   if not key in data.values.params:
-      #@     return None
-      #@   end
-      #@   return data.values.params[key]
-      #@ end
-
-      #@ if hasattr(data.values.workload.spec, "source"):
-      #@ if/end hasattr(data.values.workload.spec.source, "git"):
-      ---
-      apiVersion: source.toolkit.fluxcd.io/v1beta1
-      kind: GitRepository
-      metadata:
-        name: #@ data.values.workload.metadata.name
-        labels: #@ merge_labels({ "app.kubernetes.io/part-of": data.values.workload.metadata.name })
-      spec:
-        interval: 1m0s
-        url: #@ data.values.workload.spec.source.git.url
-        ref: #@ data.values.workload.spec.source.git.ref
-        ignore: |
-          !.git
-        #@ if/end param("gitops_ssh_secret"):
-        secretRef:
-          name: #@ param("gitops_ssh_secret")
-      #@ end
-
-      #@ if hasattr(data.values.workload.spec, "source"):
-      #@ if/end hasattr(data.values.workload.spec.source, "image"):
-      ---
-      apiVersion: source.apps.tanzu.vmware.com/v1alpha1
-      kind: ImageRepository
-      metadata:
-        name: #@ data.values.workload.metadata.name
-        labels: #@ merge_labels({ "app.kubernetes.io/component": "source" })
-      spec:
-        serviceAccountName: #@ data.values.params.serviceAccount
-        interval: 1m0s
-        image: #@ data.values.workload.spec.source.image
-      #@ end
-```
-
-```editor:select-matching-text
-file: custom-supply-chain/custom-source-provider-template.yaml
-text: "  urlPath: \"\""
-after: 1
-```
-```editor:replace-text-selection
-file: custom-supply-chain/custom-source-provider-template.yaml
-text: |2
-    urlPath: .status.artifact.url
-    revisionPath: .status.artifact.revision
-```
+#### ClusterSourceTemplate - Source Testing
 
 Since we want to enforce the source testing, we need to consider creating another `ClusterSourceTemplate` and add its reference as `source-tester` to the supply chain.
 Lets add the template `ClusterSourceTemplate`.
@@ -236,10 +136,11 @@ text: |2
         kind: ClusterSourceTemplate
         name: custom-source-tester-template-{{ session_namespace }}
 ```
+#### ClusterSourceTemplate - Source Scanning
 
 We have a requirement to scan our source code for any coding or dependency level CVEs. Let's add those pieces together to get it done.
 To achieve this, we will need to create a `ClusterSourceTemplate` that uses `SourceScan`, and then add the reference of it to the Supply Chain. 
-Lets understand what this section is. We are using a scan policy (`ScanPolicy`) named `scan-policy` and the scanning template (`ScanTemplate`) named `blob-source-scan-template` via `scanning.apps.tanzu.vmware.com/v1beta1` that was already deployed on this workshop & the TAP cluster by OOTB supply chain. We can change the policies and templates with our custom ones. We will explain this more during the image scanning section when we add it to the supply chain.
+Lets understand what this section is. We are using a scan policy `ScanPolicy` named `scan-policy` and the scanning template `ScanTemplate` named `blob-source-scan-template` via `scanning.apps.tanzu.vmware.com/v1beta1` that was already deployed on this workshop & the TAP cluster by OOTB supply chain. We can change the policies and templates with our custom ones. We will explain this more during the image scanning section when we add it to the supply chain.
 
 Create a template now:
 ```editor:append-lines-to-file
@@ -300,30 +201,57 @@ text: |2
 
 As with our custom supply chain, the **next step** is responsible for the building of a container image out of the provided source code by the first step. 
 
-TODO: Add colapsable for `kpack` and `Dockerfile` deploy
+#### ClusterImageTemplate - Kaniko Image Builder
 
-In addition to `kpack`, with our custom supply chain we want to provide a solution that builds a container image based on a **Dockerfile**. 
+In addition to `kpack`, with our custom supply chain we want to provide a solution that builds a container image based on a `Dockerfile`. 
 
 **[kaniko](https://github.com/GoogleContainerTools/kaniko)** is the solution we'll use for it. It's a tool to build container images from a Dockerfile, inside a container or Kubernetes cluster. 
+
 Because there is **no official Kubernetes CRD** for it available, we will use **Tekton** to run it in a container.
 
 Let's first create the skeleton for our new `ClusterImageTemplate`. As you can se we also added an additional ytt function that generates the context sub-path out of the Git url and revision which we need for our custom implementation.
+
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-image-kaniko-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterImageTemplate
   metadata:
+    labels:
     name: custom-image-kaniko-template-{{ session_namespace }}
   spec:
     healthRule:
       singleConditionType: Ready
-    params:
-      - name: registry
-        default: {}
     imagePath: ""
+    params:
+    - default: default
+      name: serviceAccount
+    - default: {}
+      name: registry
+    - default: ./Dockerfile
+      name: dockerfile
+    - default: ./
+      name: docker_build_context
+    - default: []
+      name: docker_build_extra_args
     ytt: |
       #@ load("@ytt:data", "data")
+
+      #@ def merge_labels(fixed_values):
+      #@   labels = {}
+      #@   if hasattr(data.values.workload.metadata, "labels"):
+      #@     labels.update(data.values.workload.metadata.labels)
+      #@   end
+      #@   labels.update(fixed_values)
+      #@   return labels
+      #@ end
+
+      #@ def param(key):
+      #@   if not key in data.values.params:
+      #@     return None
+      #@   end
+      #@   return data.values.params[key]
+      #@ end
 
       #@ def image():
       #@   return "/".join([
@@ -336,24 +264,43 @@ text: |2
       #@   ])
       #@ end
 
-      #@ def context_sub_path():
-      #@   return data.values.workload.spec.source.git.url.replace("https://github.com/","").replace(".git","").replace("/","-") + "-" + data.values.source.revision[0:7]
+      #@ def ca_cert_data():
+      #@   if "ca_cert_data" not in param("registry"):
+      #@     return ""
+      #@   end
+      #@
+      #@   return param("registry")["ca_cert_data"]
       #@ end
 ```
-We can reuse the relevant part of the simple supply chain for it.
-```editor:open-file
-file: simple-supply-chain/supply-chain.yaml
-line: 14
+##### Add Kaniko ClusterImageTemplate to the Supply Chain
+
+We want to implement it in a way that the different implementations (kpack and kaniko) will be switched based on a selector - in this case, whether the `dockerfile` parameter in the Workload is set or not.
+
+We will use this one `kpack-template` thats deployed by OOTB
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  - name: image-builder"
+after: 11
 ```
-But we want to implement in a way that the different implementations (kpack and kaniko) will be switched based on a selector - in this case, whether the `dockerfile` parameter in the Workload is set or not.
-```editor:append-lines-to-file
+
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
-
     - name: image-builder
       templateRef:
         kind: ClusterImageTemplate
-        name: kpack-template # we are using this one `kpack-template` thats deployed by OOTB 
+        options:
+        - name: kpack-template 
+          selector:
+            matchFields:
+              - key: spec.params[?(@.name=="dockerfile")]
+                operator: DoesNotExist
+        - name: custom-image-kaniko-template-{{ session_workspace }} 
+          selector:
+            matchFields:
+              - key: spec.params[?(@.name=="dockerfile")]
+                operator: Exists
       sources:
       - name: source
         resource: source-scanner
@@ -362,7 +309,12 @@ text: |2
         value:
           server: harbor.services.demo.jg-aws.com
           repository: tap-workshop-workloads
+      - name: dockerfile
+        default: ""
 ```
+
+**TODO** Why is the registry `server` value hardcoded above?
+
 This is possible via the `spec.resources[*].templateRef.options`. The documentation is available here:
 ```dashboard:reload-dashboard
 name: Cartographer Docs
@@ -436,43 +388,12 @@ text: |2
                       path: config.json
 ```
 
-```editor:select-matching-text
-file: custom-supply-chain/supply-chain.yaml
-text: "  - name: image-builder"
-after: 11
-```
-```editor:replace-text-selection
-file: custom-supply-chain/supply-chain.yaml
-text: |2
+Let's now add a `Runnable` task to our **Kaniko** `ClusterImageTemaplate` that will be used to build the image from `Dockerfile`
 
-    - name: image-builder
-      templateRef:
-        kind: ClusterImageTemplate
-        options:
-        - name: kpack-template # we are using this one `kpack-template` thats deployed by OOTB
-          selector:
-            matchFields:
-              - key: spec.params[?(@.name=="dockerfile")]
-                operator: DoesNotExist
-        - name: custom-image-kaniko-template-{{ session_namespace }} 
-          selector:
-            matchFields:
-              - key: spec.params[?(@.name=="dockerfile")]
-                operator: Exists
-      sources:
-      - name: source
-        resource: source-scanner
-      params:
-      - name: registry
-        value:
-          server: harbor.services.demo.jg-aws.com
-          repository: tap-workshop-workloads
-      - name: dockerfile
-        default: ""
-```
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-image-kaniko-template.yaml
 text: |2
+      ---
       apiVersion: carto.run/v1alpha1
       kind: Runnable
       metadata:
@@ -490,6 +411,9 @@ text: |2
           source-revision: #@ data.values.sources.source.revision
           source-subpath: #@ context_sub_path()
 ```
+
+Let's get the reference details of the image that we just built so that we can get the name of the image.
+
 ```editor:select-matching-text
 file: custom-supply-chain/custom-image-kaniko-template.yaml
 text: "  imagePath: \"\""
@@ -558,8 +482,9 @@ text: |2
         kind: ClusterImageTemplate
         name: custom-image-scanner-template-{{ session_namespace }}
 ```
+**TODO** This sescion uses the RegistryOps model. Our first session we used a GitOps model
+To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` that will create a new `PodIntent` object that will be consumed by TAP's **Conventions Service**
 
-Let's add `ClusterConfigTemplate`s
 Step1: In this step we will add `ClusterConfigTemplate` for `PodIntent` and its reference to the Supply Chain.
 Lets add a template:
 ```editor:append-lines-to-file
@@ -668,7 +593,7 @@ text: |2
 ```
 
 
-Step2: In this step we will add `ClusterConfigTemplate` and the `ClusterTemplate` templates and the reference to the Supply Chain for configs.
+Step2: In this step we will add `ClusterConfigTemplate` and the `ClusterTemplate` templates and the reference to the Supply Chain for App-Configs.
 Lets add a template:
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-app-config-template.yaml
@@ -815,24 +740,40 @@ text: |2
           serviceclaims.yml: #@ yaml.encode(claims())
           #@ end
 ```
-Now add the reference to the supply chain:
-```editor:append-lines-to-file
+
+Now let's update the `App-Config` section of the supply chain so that it reads from `config-provider`
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  - name: app-config"
+after: 6
+```
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
-
-    - configs:
+    - name: app-config
+      configs:
       - name: config
         resource: config-provider
-      name: app-config
       templateRef:
         kind: ClusterConfigTemplate
         name: custom-app-config-template-{{ session_namespace }}
 ```
 
-Lets add a template:
-```editor:append-lines-to-file
+##### Handling both GitOps and RegistryOps Scenarios
+Let's replace our previously customized `ClusterTemplate` with the one that comes from OOTB templates. This will be used to create a `deliverable` which will in turn create a `Runnable` task to generate the deployment manifest and push it to either GitOps Repository or designated Container Registry.
+
+```editor:select-matching-text
+file: custom-supply-chain/custom-config-writer-template.yaml
+text: "apiVersion: carto.run/v1alpha1"
+before: 0
+after: 26
+```
+
+```editor:replace-text-selection
 file: custom-supply-chain/custom-config-writer-template.yaml
 text: |2
+    ---
     apiVersion: carto.run/v1alpha1
     kind: ClusterTemplate
     metadata:
@@ -988,15 +929,21 @@ text: |2
                 value: #@ ca_cert_data()
               #@ end
 ```
-Reference:
-```editor:append-lines-to-file
+Let's update the supply chain next...
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  - name: config-writer"
+after: 9
+```
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
-    - configs:
+    - name: config-writer
+      configs:
       - name: config
         resource: app-config
-      name: config-writer
       params:
       - name: serviceAccount
         value: default
@@ -1009,10 +956,23 @@ text: |2
         kind: ClusterTemplate
         name: custom-config-writer-template-{{ session_namespace }}
 ```
+##### Deliverable
 
 **Finally**, lets add a deliverable before we apply the supply chain to the cluster.
-Lets add a `ClusterTemplate`:
-```editor:append-lines-to-file
+
+Let's replace the previously used `ClusterTemplate` which was only able to habdle GitOps with the OOTB temaplte that can handle the **RegistryOps** use cases
+
+```editor:select-matching-text
+file: custom-supply-chain/custom-deliverable-template.yaml
+text: "apiVersion: carto.run/v1alpha1"
+before: 0
+after: 20
+```
+##### Cluster Delivery ClusterTempalte
+
+Now let's add the deployment spec as the last step.
+
+```editor:replace-text-selection
 file: custom-supply-chain/custom-deliverable-template.yaml
 text: |2
     apiVersion: carto.run/v1alpha1
@@ -1141,8 +1101,16 @@ text: |2
             #@ if/end not is_gitops():
             image: #@ image()
 ```
-Reference to the supply chain:
-```editor:append-lines-to-file
+Let's update our supply chain and replace the existing `Deliverable` that only handles GitOps with the OOTB one that also habdles RegistryOps
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "- name: deliverable"
+before: 0
+after: 6
+```
+
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
@@ -1174,7 +1142,6 @@ text: |2
       app.kubernetes.io/part-of: app-with-custom-supply-chain
       apps.tanzu.vmware.com/workload-type: web
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true" 
     name: app-with-custom-supply-chain
   spec:
     params:

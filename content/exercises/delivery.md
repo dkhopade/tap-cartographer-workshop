@@ -10,24 +10,24 @@ A **Deliverable** allows the operator to pass information about the configuratio
 For the sake of simplicity, we will now deploy our application to the same cluster we used for building it.
 Let's first create a **Deliverable** resource to pass the required information to the ClusterDelivery. In this case, all is already available in the Workload and the ClusterSupplyChain parameters. Therefore, let's extend our Supply Chain to stamp out the Deliverable.
 ```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
     - name: deliverable
       templateRef:
         kind: ClusterTemplate
-        name: simple-deliverable-template-{{ session_namespace }}
+        name: custom-deliverable-template-{{ session_namespace }}
       params:
       - name: gitops_repository
         value: {{ ENV_GITOPS_REPOSITORY}}
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-deliverable-template.yaml
+file: custom-supply-chain/custom-deliverable-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterTemplate
   metadata:
-    name: simple-deliverable-template-{{ session_namespace }}
+    name: custom-deliverable-template-{{ session_namespace }}
   spec:
     template:
       apiVersion: carto.run/v1alpha1
@@ -47,12 +47,12 @@ text: |2
 
 We will now create our full ClusterDelivery and after that implement all the required Templates.
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-delivery.yaml
+file: custom-supply-chain/custom-delivery.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterDelivery
   metadata:
-    name: simple-delivery-{{ session_namespace }}
+    name: custom-delivery-{{ session_namespace }}
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
@@ -61,7 +61,7 @@ text: |2
     - name: source-provider
       templateRef:
         kind: ClusterSourceTemplate
-        name: simple-delivery-source-template-{{ session_namespace }}
+        name: custom-delivery-source-template-{{ session_namespace }}
     - name: deployer
       templateRef:
         kind: ClusterDeploymentTemplate
@@ -75,12 +75,12 @@ ClusterSourceTemplates and ClusterTemplates are valid for ClusterDelivery. It ad
 
 Like for the Supply Chain, we will use the [Flux](https://fluxcd.io) Source Controller to watch our GitOps repository for changes.
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-delivery-source-template.yaml
+file: custom-supply-chain/custom-delivery-source-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterSourceTemplate
   metadata:
-    name: simple-delivery-source-template-{{ session_namespace }}
+    name: custom-delivery-source-template-{{ session_namespace }}
   spec:
     urlPath: .status.artifact.url
     revisionPath: .status.artifact.revision
@@ -100,7 +100,7 @@ text: |2
 
 Let's now continue with the creation of the **ClusterDeploymentTemplate**.
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-deployment-template.yaml
+file: custom-supply-chain/custom-deployment-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterDeploymentTemplate
@@ -160,12 +160,12 @@ We are using a Knative Serving Service for our deployment. This resource type ha
 
 We are now able to apply our updated and new resources to the cluster ...
 ```terminal:execute
-command: kapp deploy -a simple-supply-chain -f simple-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
+command: kapp deploy -a custom-supply-chain -f custom-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
 clear: true
 ```
 ... and can check whether everything is working as expected and the deployed application is accessible.
 ```terminal:execute
-command: kubectl describe ClusterDelivery simple-delivery-{{ session_namespace }}
+command: kubectl describe ClusterDelivery custom-delivery-{{ session_namespace }}
 clear: true
 ```
 ```terminal:execute
@@ -205,12 +205,5 @@ name: Cartographer Docs
 url: https://cartographer.sh/docs/v0.4.0/reference/template/#clusterdeploymenttemplate
 ```
 
-Now that you have a better understanding of how all the building blocks of Cartographer work, let's have a look what's out of the box with VMware Application Platform.
-
-But before, let's delete the resources that we applied to the cluster.
-```terminal:execute
-command: |
-  kubectl delete -f workload.yaml
-  kapp delete -a simple-supply-chain -y
-clear: true
-```
+#### End of Part One (Basic Supply Chain)
+Now that you have a better understanding of how all the building blocks of Cartographer work, let's customize and extend this supply chain to include testing and scanning with Grype

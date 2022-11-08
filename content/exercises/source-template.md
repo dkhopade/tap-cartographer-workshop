@@ -9,19 +9,29 @@ url: https://cartographer.sh/docs/v0.4.0/reference/template/#clustersourcetempla
 `ClusterSourceTemplate` indicates how the supply chain could instantiate an object responsible for providing source code.
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-source-template.yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterSourceTemplate
   metadata:
-    name: simple-source-template-{{ session_namespace }}
+    name: custom-source-provider-template-{{ session_namespace }}
   spec:
-    healthRule:
-      singleConditionType: Ready
     urlPath: ""
     revisionPath: ""
     ytt: ""
 ```
+
+In TAP 1.2 we have the ability to detect the [**Health Status**](https://cartographer.sh/docs/v0.4.0/health-rules/) of the Supply Chain component. To accomplish that, we need to add `healthRule` spec to the respective component. We will be  adding for the rest of the components.
+This is possible via the `spec.healthRule`. The documentation is available here:
+
+```editor:insert-value-into-yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
+path: spec
+value:
+  healthRule:
+    singleConditionType: Ready
+```
+
 All ClusterSourceTemplate cares about is whether the `spec.urlPath` and `spec.revisionPath` are passed in correctly from the templated object that implements the actual functionality we want to use as part of our path to production.
 
 For our continuous path to production where every git commit to the codebase will trigger another execution of the Supply Chain, we need a solution that watches our configured source code Git repository for changes or will be trigger via e.g. a Webhook and provides the sourcecode for steps/resources that follow it.
@@ -48,11 +58,11 @@ Both options for templating **provide a data structure** that contains:
 
 For our first functionality, we will use a `ytt` and use the configuration provided by the Workload.
 ```editor:select-matching-text
-file: simple-supply-chain/simple-source-template.yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
 text: "  ytt: \"\""
 ```
 ```editor:replace-text-selection
-file: simple-supply-chain/simple-source-template.yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
 text: |2
     ytt: |
       #@ load("@ytt:data", "data")
@@ -110,12 +120,12 @@ text: |2
 
 On every successful repository sync, the status of the custom GitRepository resource will be updated with an url to download an archive that contains the source code and the revision. We can use this information as the output of our Template specified in jsonpath.
 ```editor:select-matching-text
-file: simple-supply-chain/simple-source-template.yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
 text: "  urlPath: \"\""
 after: 1
 ```
 ```editor:replace-text-selection
-file: simple-supply-chain/simple-source-template.yaml
+file: custom-supply-chain/custom-source-provider-template.yaml
 text: |2
     urlPath: .status.artifact.url
     revisionPath: .status.artifact.revision
@@ -123,18 +133,18 @@ text: |2
 
 The last thing we have to do is to reference our template in the `spec.resources` of our Supply Chain.
 ```editor:select-matching-text
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: "  resources: []"
 ```
 
 ```editor:replace-text-selection
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
     resources:
     - name: source-provider
       templateRef:
         kind: ClusterSourceTemplate
-        name: simple-source-template-{{ session_namespace }}
+        name: custom-source-provider-template-{{ session_namespace }}
 ```
 
 With the `spec.resources[*].templateRef.options` field, it's also possible to define multiple templates of the same kind for one resource to change the implementation of a step based on a selector.
