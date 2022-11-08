@@ -6,12 +6,12 @@ With the GitOps approach, Git is used to version and store the necessary deploym
 Therefore, the last step of our Supply Chain is the push of the deployment configuration to Git repository. 
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
     - name: config-writer
       templateRef:
         kind: ClusterTemplate
-        name: simple-config-writer-template-{{ session_namespace }}
+        name: custom-config-writer-template-{{ session_namespace }}
       configs:
       - resource: app-config
         name: config
@@ -21,12 +21,12 @@ text: |2
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-config-writer-template.yaml
+file: custom-supply-chain/custom-config-writer-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterTemplate
   metadata:
-    name: simple-config-writer-template-{{ session_namespace }}
+    name: custom-config-writer-template-{{ session_namespace }}
   spec:
     healthRule:
       singleConditionType: Ready

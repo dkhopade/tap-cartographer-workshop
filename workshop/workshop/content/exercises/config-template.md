@@ -2,24 +2,24 @@ A **ClusterConfigTemplate** instructs the supply chain on how to instantiate a K
 
 For our simple example, we use it to provide the deployment configuration of our application to the last step of our Supply Chain. We therefore have to consume the outputs of our ClusterImageTemplate resource by referencing it via the `spec.resources[*].images` field of our Supply Chain definition. 
 ```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
     - name: app-config
       templateRef:
         kind: ClusterConfigTemplate
-        name: simple-config-provider-template-{{ session_namespace }}
+        name: custom-config-provider-template-{{ session_namespace }}
       images:
       - resource: image-builder
         name: image
 ```
 For the deployment of our application, we will use Knative, which is a serverless application runtime for Kubernetes with e.g. auto-scaling capabilities to save costs.
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-config-provider-template.yaml
+file: custom-supply-chain/custom-config-provider-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterConfigTemplate
   metadata:
-    name: simple-config-provider-template-{{ session_namespace }}
+    name: custom-config-provider-template-{{ session_namespace }}
   spec:
     configPath: .data.delivery
     ytt: |

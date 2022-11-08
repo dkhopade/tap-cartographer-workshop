@@ -22,7 +22,6 @@ text: |2
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true"
     resources: []
 ```
 
@@ -175,7 +174,7 @@ text: |2
 
 We can reuse the relevant part of the simple supply chain for it.
 ```editor:open-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 line: 14
 ```
 But we want to implement in a way that the different implementations (kpack and kaniko) will be switched based on a selector - in this case, whether the `dockerfile` parameter in the Workload is set or not.
@@ -423,16 +422,15 @@ clear: true
 ```
 To test it we last but not least have to create a **matching Workload**, ...
 ```editor:append-lines-to-file
-file: workload-custom-sc.yaml
+file: ~/workload-docker.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: Workload
   metadata:
     labels:
-      app.kubernetes.io/part-of: simple-python-app
+      app.kubernetes.io/part-of: custom-python-app
       end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true" 
-    name: simple-python-app
+    name: custom-python-app
   spec:
     params:
     - name: dockerfile
@@ -446,36 +444,36 @@ text: |2
 ... apply it, ...
 ```terminal:execute
 command: |
-  kubectl apply -f workload-custom-sc.yaml
+  kubectl apply -f ~/workload-docker.yaml
 clear: true
 ```
 ... and then we are able to see via the commercial Supply Chain Choreographer UI plugin and the following commands whether everything works as expected.
 
 ```dashboard:reload-dashboard
 name: Cartographer Docs
-url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/simple-python-app
+url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/custom-python-app
 ```
 ```terminal:execute
 command: kubectl describe clustersupplychain custom-supplychain-{{ session_namespace }}
 clear: true
 ```
 ```terminal:execute
-command: kubectl tree workload simple-python-app
+command: kubectl tree workload custom-python-app
 clear: true
 ```
 ```terminal:execute
-command: kubectl describe workload simple-python-app
+command: kubectl describe workload custom-python-app
 clear: true
 ```
 ```execute-2
-tanzu apps workload tail simple-python-app
+tanzu apps workload tail custom-python-app
 ```
 
 That's it! You have built your first custom supply chain, and hopefully, many more will follow.
 Let's delete the resources that we applied to the cluster.
 ```terminal:execute
 command: |
-  kubectl delete -f workload-custom-sc.yaml
+  kubectl delete -f ~/workload-docker.yaml
   kapp delete -a custom-supply-chain -y
 clear: true
 ```

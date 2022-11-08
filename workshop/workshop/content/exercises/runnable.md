@@ -4,11 +4,11 @@ A **ClusterRunTemplate** differs from supply chain templates in many aspects (e.
 
 Sounds like we've found a way to stamp out our immutable **TaskRuns** and **PipelineRuns**.
 ```editor:select-matching-text
-file: simple-supply-chain/simple-config-writer-template.yaml
+file: custom-supply-chain/custom-config-writer-template.yaml
 text: "  ytt: \"\""
 ```
 ```editor:replace-text-selection
-file: simple-supply-chain/simple-config-writer-template.yaml
+file: custom-supply-chain/custom-config-writer-template.yaml
 text: |2
     ytt: |
       #@ load("@ytt:data", "data")
@@ -24,7 +24,7 @@ text: |2
           app.kubernetes.io/part-of: #@ data.values.workload.metadata.name
       spec:
         runTemplateRef:
-          name: simple-run-template-{{ session_namespace }}
+          name: custom-run-template-{{ session_namespace }}
 
         inputs:
           git_repository: #@ data.values.params.git_repository
@@ -32,12 +32,12 @@ text: |2
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/simple-run-template.yaml
+file: custom-supply-chain/custom-run-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterRunTemplate
   metadata:
-    name: simple-run-template-{{ session_namespace }}
+    name: custom-run-template-{{ session_namespace }}
   spec:
     outputs: {}
     template: {}
@@ -46,12 +46,12 @@ text: |2
 
 We'll now configure a TaskRun to push the deployment configuration to a Git repository.
 ```editor:select-matching-text
-file: simple-supply-chain/simple-run-template.yaml
+file: custom-supply-chain/custom-run-template.yaml
 text: "  outputs: {}"
 after: 1
 ```
 ```editor:replace-text-selection
-file: simple-supply-chain/simple-run-template.yaml
+file: custom-supply-chain/custom-run-template.yaml
 text: |2
     template:
       apiVersion: tekton.dev/v1beta1
@@ -102,7 +102,7 @@ url: https://cartographer.sh/docs/v0.4.0/reference/runnable/
 Let's now apply our resources to the cluster as a group of resources via the kapp CLI and see via the commercial Supply Chain Choreographer UI plugin and the following commands whether everything works as expected.
 ```terminal:execute
 command: |
-  kapp deploy -a simple-supply-chain -f simple-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
+  kapp deploy -a custom-supply-chain -f custom-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
   kubectl apply -f workloads/workload.yaml
 clear: true
 ```
@@ -124,7 +124,7 @@ name: Cartographer Docs
 url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/host/{{ session_namespace }}/tanzu-java-web-app
 ```
 ```terminal:execute
-command: kubectl describe clustersupplychain simple-supplychain-{{ session_namespace }}
+command: kubectl describe clustersupplychain custom-supplychain-{{ session_namespace }}
 clear: true
 ```
 ```terminal:execute
