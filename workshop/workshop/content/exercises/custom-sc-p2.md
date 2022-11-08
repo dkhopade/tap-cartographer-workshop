@@ -773,7 +773,6 @@ after: 26
 ```editor:replace-text-selection
 file: custom-supply-chain/custom-config-writer-template.yaml
 text: |2
-    ---
     apiVersion: carto.run/v1alpha1
     kind: ClusterTemplate
     metadata:
