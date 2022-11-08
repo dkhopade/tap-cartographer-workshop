@@ -1,20 +1,22 @@
 Before we define our resources, let's have a look at the **Workload**, which is an **abstraction for developers** to configure things like the location of the source code repository, environment variables and service claims for an application to be delivered through the supply chain.
 ```editor:append-lines-to-file
-file: workload.yaml
+file: workloads/workload.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: Workload
   metadata:
     labels:
-      app.kubernetes.io/part-of: simple-app
+      app.kubernetes.io/part-of: tanzu-java-web-app
+      apps.tanzu.vmware.com/workload-type: web
       end2end.link/workshop-session: {{ session_namespace }}
-    name: simple-app
+    name: tanzu-java-web-app
   spec:
     source:
       git:
         ref:
           branch: main
-        url: https://github.com/tsalm-pivotal/spring-boot-hello-world.git
+          tag: tap-1.2
+        url: https://github.com/sample-accelerators/tanzu-java-web-app.git
 ```
 For the matching of our Workload and Supply Chain we have to set the **label of our ClusterSupplyChain's label selector**. We also defined `app.kubernetes.io/part-of: simple-app` as a label that is required for the commercial Supply Chain Choreographer UI plugin. 
 The location of an application's source code can be configured via the `spec.source` field. Here, we are using a branch of a Git repository as a source to be able to implement a **continuous path to production** where every git commit to the codebase will trigger another execution of the Supply Chain, and developers only have to apply a Workload only once if they start with a new application or microservice. 
@@ -25,6 +27,7 @@ Other configuration options are available for resource constraints (`spec.limits
 Last but not least via (`.spec.params`), it's possible to override default values of the additional parameters that are used in the Supply Chain but not part of the official Workload specification.
 
 The detailed specification can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/workload/#workload
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/workload/#workload
 ```

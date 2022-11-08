@@ -192,11 +192,12 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.emea.end2end.link
-          repository: tap-wkld
+          server: harbor.services.demo.jg-aws.com
+          repository: tap-workshop-workloads
 ```
 This is possible via the `spec.resources[*].templateRef.options`. The documentation is available here:
-```dashboard:open-url
+```dashboard:reload-dashboard
+name: Cartographer Docs
 url: https://cartographer.sh/docs/v0.4.0/reference/workload/#clustersupplychain
 ```
 
@@ -297,8 +298,8 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.emea.end2end.link
-          repository: tap-wkld
+          server: harbor.services.demo.jg-aws.com
+          repository: tap-workshop-workloads
       - name: dockerfile
         default: ""
 ```
@@ -450,8 +451,9 @@ clear: true
 ```
 ... and then we are able to see via the commercial Supply Chain Choreographer UI plugin and the following commands whether everything works as expected.
 
-```dashboard:open-url
-url: https://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/simple-python-app
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: http://tap-gui.{{ ENV_TAP_INGRESS }}/supply-chain/{{ session_namespace }}/simple-python-app
 ```
 ```terminal:execute
 command: kubectl describe clustersupplychain custom-supplychain-{{ session_namespace }}

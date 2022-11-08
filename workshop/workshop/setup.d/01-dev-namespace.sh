@@ -3,16 +3,23 @@ set -x
 set +e
 
 REGISTRY_PASSWORD=$CONTAINER_REGISTRY_PASSWORD kp secret create registry-credentials --registry ${CONTAINER_REGISTRY_HOSTNAME} --registry-user ${CONTAINER_REGISTRY_USERNAME}
-kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registry-credentials"}, {"name": "tanzu-net-credentials"}]}'
+REGISTRY_PASSWORD=$CONTAINER_REGISTRY_PASSWORD kp secret create tap-registry --registry ${CONTAINER_REGISTRY_HOSTNAME} --registry-user ${CONTAINER_REGISTRY_USERNAME}
+kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registry-credentials"}, {"name": "tanzu-net-credentials"}, {"name": "tap-registry"}]}'
 
-git clone https://github.com/tsalm-pivotal/tap-cartographer-workshop.git
+# TODO: Is this needed?
+# git clone https://github.com/mrgaryg/tap-cartographer-workshop.git
 
 kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-cli/0.3/git-cli.yaml
 
-git_hostname=$(echo $GITOPS_REPOSITORY | grep -oP '(?<=https://).*?(?=/)')
+git_hostname=$(echo $GITOPS_REPOSITORY | grep -oP '(?<=http://).*?(?=/)')
 
 kubectl annotate namespace ${SESSION_NAMESPACE} secretgen.carvel.dev/excluded-from-wildcard-matching-
 
+# Create directories for workshop
+mkdir ~/workloads
+
+# Create Tekton Secret for GitOps repo
+# We use Gitea for GitOps repo
 cat <<EOF | kubectl apply -f -
 kind: Secret
 apiVersion: v1
@@ -21,12 +28,14 @@ metadata:
 type: Opaque
 stringData:
   .gitconfig: |
-    [credential "https://$git_hostname"]
+    [credential "http://$git_hostname"]
       helper = store
   .git-credentials: |
-    https://$GITOPS_REPOSITORY_USERNAME:$GITOPS_REPOSITORY_PASSWORD@$git_hostname
+    http://$GITOPS_REPOSITORY_USERNAME:$GITOPS_REPOSITORY_PASSWORD@$git_hostname
 EOF
 
+# Create Flux Secret for GitOps repo
+# We use Gitea for GitOps repo
 cat <<EOF | kubectl apply -f -
 kind: Secret
 apiVersion: v1
@@ -37,6 +46,7 @@ data:
   password: $(echo $GITOPS_REPOSITORY_PASSWORD | base64)
 EOF
 
+# Create a custom Tekton Pipeline to for code scanning
 cat << \EOF | kubectl apply -f -
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
@@ -48,7 +58,6 @@ spec:
   params:
     - name: source-url                       # (!) required
     - name: source-revision                  # (!) required
-    - name: source-sub-path                  # (!) required
   tasks:
     - name: test
       params:
@@ -56,27 +65,73 @@ spec:
           value: $(params.source-url)
         - name: source-revision
           value: $(params.source-revision)
-        - name: source-sub-path
-          value: $(params.source-sub-path)
       taskSpec:
         params:
           - name: source-url
           - name: source-revision
-          - name: source-sub-path
         steps:
           - name: test
-            image: maven:3-openjdk-11
+            image: maven:3.5-jdk-11
             script: |-
               cd `mktemp -d`
               wget -qO- $(params.source-url) | tar xvz -m
-              cd $(params.source-sub-path)
               mvn test
 EOF
+
+# Apply relaxed scan policy to the session workshop
+cat << \EOF | kubectl apply -f -
+apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
+kind: ScanPolicy
+metadata:
+  name: lax-scan-policy
+  labels:
+    app.kubernetes.io/part-of: scan-system
+spec:
+  regoFile: |
+    package main
+
+    # Accepted Values: "Critical", "High", "Medium", "Low", "Negligible", "UnknownSeverity"
+    notAllowedSeverities := ["UnknownSeverity"]
+
+    ignoreCves := []
+
+    contains(array, elem) = true {
+      array[_] = elem
+    } else = false { true }
+
+    isSafe(match) {
+      severities := { e | e := match.ratings.rating.severity } | { e | e := match.ratings.rating[_].severity }
+      some i
+      fails := contains(notAllowedSeverities, severities[i])
+      not fails
+    }
+
+    isSafe(match) {
+      ignore := contains(ignoreCves, match.id)
+      ignore
+    }
+
+    deny[msg] {
+      comps := { e | e := input.bom.components.component } | { e | e := input.bom.components.component[_] }
+      some i
+      comp := comps[i]
+      vulns := { e | e := comp.vulnerabilities.vulnerability } | { e | e := comp.vulnerabilities.vulnerability[_] }
+      some j
+      vuln := vulns[j]
+      ratings := { e | e := vuln.ratings.rating.severity } | { e | e := vuln.ratings.rating[_].severity }
+      not isSafe(vuln)
+      msg = sprintf("CVE %s %s %s", [comp.name, vuln.id, ratings])
+    }
+EOF
+
+# Apply strict scan policy to the session workshop with some `ignoreCves` as example
 cat << EOF | kubectl apply -f -
 apiVersion: scanning.apps.tanzu.vmware.com/v1beta1
 kind: ScanPolicy
 metadata:
   name: scan-policy
+  labels:
+    app.kubernetes.io/part-of: scan-system
 spec:
   regoFile: |
     package main
@@ -113,6 +168,8 @@ spec:
       msg = sprintf("CVE %s %s %s", [comp.name, vuln.id, ratings])
     }
 EOF
+
+# Deploy sample workload through testing and scanning supply chain
 cat << EOF | kubectl apply -f -
 apiVersion: carto.run/v1alpha1
 kind: Workload
@@ -127,5 +184,5 @@ spec:
     git:
       ref:
         branch: main
-      url: https://github.com/tsalm-pivotal/spring-boot-hello-world.git
+      url: https://github.com/mrgaryg/spring-boot-hello-world.git
 EOF

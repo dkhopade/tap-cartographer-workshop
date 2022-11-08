@@ -5,18 +5,30 @@
 apiVersion: learningcenter.tanzu.vmware.com/v1beta1
 kind: Workshop
 metadata:
-  name: scc-workshop
+  name: scc-workshop-dev
 spec:
-  title: Supply Chain Choreographer
-  description: A workshop that demonstrates all the capabilities Supply Chain Choreographer provides.
+  title: Supply Chain Choreographer - Development Version
+  description: A workshop that demonstrates the capabilities Supply Chain Choreographer provides.
   vendor: tanzu.vmware.com
-  difficulty: beginner
-  duration: 200m
-  url: https://github.com/tsalm-pivotal/tap-cartographer-workshop
+  authors:
+    - Timo Salm
+    - Gary Gutman
+    - Deepak Khopade
+  #! The difficulty field indicates the target audiences of the workshop. 
+  #! The value can be: beginner, intermediate, advanced, or extreme.
+  difficulty: intermediate
+  #! The duration field gives the maximum amount of time the workshop takes to complete. 
+  #! This field provides informational value and does not guarantee how long a workshop instance lasts. 
+  #! The field format is an integer number with s, m, or h suffix.
+  duration: 3h
+  #! url: https://github.com/mrgaryg/tap-cartographer-workshop
+  url: #@ data.values.workshop_git.git_url + "/" + data.values.workshop_git.git_org_name + "/" + data.values.workshop_git.git_repo
   content:
     image: #@ "{}/tap-workshop/cartographer-workshop:latest".format(data.values.container_registry.hostname)
-    files: #@ "github.com/{}/tap-cartographer-workshop/workshop?ref={}".format(data.values.workshop_git.username,data.values.workshop_git.branch)
+    files: #@ "{}/{}/tap-cartographer-workshop/workshop?ref={}".format(data.values.workshop_git.git_url,data.values.workshop_git.git_org_name,data.values.workshop_git.branch)
   session:
+    resources:
+      memory: 3Gi
     namespaces:
       budget: custom
     applications:
@@ -28,6 +40,15 @@ spec:
         vendor: octant
       editor:
         enabled: true
+    dashboards:
+      - name: Cartographer Docs
+        url: https://cartographer.sh/docs/development/
+      - name: TAP GUI
+        url: #@ "http://tap-gui.{}/supply-chain/".format(data.values.tap.ingress_domain)
+      - name: Cartographer Live Editor
+        url: https://cartographer.sh/live-editor/index.htm
+      - name: Supply Chain Choreographer for Tanzu
+        url: https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.2/tap/GUID-scc-about.html
     env: 
     - name: TAP_INGRESS
       value: #@ data.values.tap.ingress_domain
@@ -57,7 +78,7 @@ spec:
             - type: PersistentVolumeClaim
               max:
                 storage: 10Gi
-      # Permissions for tap-sa (Supply Chain)
+      #! Permissions for tap-sa (Supply Chain)
       - apiVersion: v1
         kind: Secret
         metadata:
@@ -71,55 +92,99 @@ spec:
         kind: Role
         metadata:
           name: $(session_namespace)-default
+        #! rules:
+        #! - apiGroups: ["*"]
+        #!   resources: ["*"]
+        #!   verbs: ["*"]
         rules:
-        - apiGroups: [source.toolkit.fluxcd.io]
-          resources: [gitrepositories]
-          verbs: ['*']
-        - apiGroups: [source.apps.tanzu.vmware.com]
-          resources: [imagerepositories]
-          verbs: ['*']
-        - apiGroups: [carto.run]
-          resources: [deliverables, runnables]
-          verbs: ['*']
-        - apiGroups: [kpack.io]
-          resources: [images]
-          verbs: ['*']
-        - apiGroups: [conventions.apps.tanzu.vmware.com]
-          resources: [podintents]
-          verbs: ['*']
-        - apiGroups: [""]
-          resources: ['configmaps']
-          verbs: ['*']
-        - apiGroups: [""]
-          resources: ['pods']
-          verbs: ['list']
-        - apiGroups: [tekton.dev]
-          resources: [taskruns, pipelineruns]
-          verbs: ['*']
-        - apiGroups: [tekton.dev]
-          resources: [pipelines]
-          verbs: ['list']
-        - apiGroups: [kappctrl.k14s.io]
-          resources: [apps]
-          verbs: ['*']
-        - apiGroups: [serving.knative.dev]
-          resources: ['services']
-          verbs: ['*']
-        - apiGroups: [servicebinding.io]
-          resources: ['servicebindings']
-          verbs: ['*']
-        - apiGroups: [services.apps.tanzu.vmware.com]
-          resources: ['resourceclaims']
-          verbs: ['*']
-        - apiGroups: [scanning.apps.tanzu.vmware.com]
-          resources: ['imagescans', 'sourcescans']
-          verbs: ['*']
         - apiGroups:
-          - timosalm.de
+          - source.toolkit.fluxcd.io
           resources:
-          - githubrepositories
+          - gitrepositories
           verbs:
           - '*'
+        - apiGroups:
+          - source.apps.tanzu.vmware.com
+          resources:
+          - imagerepositories
+          verbs:
+          - '*'
+        - apiGroups:
+          - carto.run
+          resources:
+          - deliverables
+          - runnables
+          verbs:
+          - '*'
+        - apiGroups:
+          - kpack.io
+          resources:
+          - images
+          verbs:
+          - '*'
+        - apiGroups:
+          - conventions.apps.tanzu.vmware.com
+          resources:
+          - podintents
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - list
+        - apiGroups:
+          - tekton.dev
+          resources:
+          - taskruns
+          - pipelineruns
+          verbs:
+          - '*'
+        - apiGroups:
+          - tekton.dev
+          resources:
+          - pipelines
+          verbs:
+          - list
+        - apiGroups:
+          - kappctrl.k14s.io
+          resources:
+          - apps
+          verbs:
+          - '*'
+        - apiGroups:
+          - serving.knative.dev
+          resources:
+          - services
+          verbs:
+          - '*'
+        - apiGroups:
+          - servicebinding.io
+          resources:
+          - servicebindings
+          verbs:
+          - '*'
+        - apiGroups:
+          - services.apps.tanzu.vmware.com
+          resources:
+          - resourceclaims
+          verbs:
+          - '*'
+        - apiGroups:
+          - scanning.apps.tanzu.vmware.com
+          resources:
+          - imagescans
+          - sourcescans
+          verbs:
+          - '*'
+        #! ---End of RBAC Rule ---
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
         metadata:
@@ -132,7 +197,7 @@ spec:
           - kind: ServiceAccount
             name: default
             namespace: $(session_namespace)
-      # Permissions for workshop session
+      #! Permissions for workshop session
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
         metadata:
@@ -161,7 +226,7 @@ spec:
             namespace: $(session_namespace)
             name: default
 
-      # Install grype
+      #! Install grype
       - apiVersion: packaging.carvel.dev/v1alpha1
         kind: PackageInstall
         metadata:
@@ -188,7 +253,7 @@ spec:
             ---
             namespace: $(session_namespace)
             targetImagePullSecret: registry-credentials
-      # Conventions Service
+      #! Conventions Service
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRole
         metadata:
@@ -209,7 +274,7 @@ spec:
         - kind: Group
           name: system:serviceaccounts:$(workshop_namespace)
           apiGroup: rbac.authorization.k8s.io
-      # supply chain
+      #! supply chain
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRole
         metadata:

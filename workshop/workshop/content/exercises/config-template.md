@@ -7,19 +7,19 @@ text: |2
     - name: app-config
       templateRef:
         kind: ClusterConfigTemplate
-        name: simple-config-template-{{ session_namespace }}
+        name: simple-config-provider-template-{{ session_namespace }}
       images:
       - resource: image-builder
         name: image
 ```
 For the deployment of our application, we will use Knative, which is a serverless application runtime for Kubernetes with e.g. auto-scaling capabilities to save costs.
 ```editor:append-lines-to-file
-file: simple-supply-chain/config-template.yaml
+file: simple-supply-chain/simple-config-provider-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterConfigTemplate
   metadata:
-    name: simple-config-template-{{ session_namespace }}
+    name: simple-config-provider-template-{{ session_namespace }}
   spec:
     configPath: .data.delivery
     ytt: |
@@ -52,6 +52,7 @@ text: |2
 The ClusterConfigTemplate requires definition of a `spec.configPath` and it will update its status to emit a config value, which is a reflection of the value at the path on the created object. 
 
 The detailed specifications of the ClusterConfigTemplate can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/template/#clusterconfigtemplate
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/template/#clusterconfigtemplate
 ```

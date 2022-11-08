@@ -22,7 +22,7 @@ text: |2
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/deliverable-template.yaml
+file: simple-supply-chain/simple-deliverable-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterTemplate
@@ -47,7 +47,7 @@ text: |2
 
 We will now create our full ClusterDelivery and after that implement all the required Templates.
 ```editor:append-lines-to-file
-file: simple-supply-chain/delivery.yaml
+file: simple-supply-chain/simple-delivery.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterDelivery
@@ -65,7 +65,7 @@ text: |2
     - name: deployer
       templateRef:
         kind: ClusterDeploymentTemplate
-        name: simple-app-deploy-{{ session_namespace }}
+        name: tanzu-java-web-app-deploy-{{ session_namespace }}
       deployment:
         resource: source-provider
 ```
@@ -75,7 +75,7 @@ ClusterSourceTemplates and ClusterTemplates are valid for ClusterDelivery. It ad
 
 Like for the Supply Chain, we will use the [Flux](https://fluxcd.io) Source Controller to watch our GitOps repository for changes.
 ```editor:append-lines-to-file
-file: simple-supply-chain/delivery-source-template.yaml
+file: simple-supply-chain/simple-delivery-source-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterSourceTemplate
@@ -100,12 +100,12 @@ text: |2
 
 Let's now continue with the creation of the **ClusterDeploymentTemplate**.
 ```editor:append-lines-to-file
-file: simple-supply-chain/deployment-template.yaml
+file: simple-supply-chain/simple-deployment-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterDeploymentTemplate
   metadata:
-    name: simple-app-deploy-{{ session_namespace }}
+    name: tanzu-java-web-app-deploy-{{ session_namespace }}
   spec:
     observedCompletion:
       succeeded:
@@ -169,34 +169,40 @@ command: kubectl describe ClusterDelivery simple-delivery-{{ session_namespace }
 clear: true
 ```
 ```terminal:execute
-command: kubectl tree deliverable simple-app
+command: kubectl tree deliverable tanzu-java-web-app
 clear: true
 ```
 ```terminal:execute
-command: kubectl describe deliverable simple-app
+command: kubectl describe deliverable tanzu-java-web-app
 clear: true
 ```
 ```terminal:execute
-command: kubectl describe app simple-app
+command: kubectl describe app tanzu-java-web-app
 clear: true
 ```
 ```terminal:execute
-command: kubectl describe kservice simple-app
+command: kubectl describe kservice tanzu-java-web-app
 clear: true
 ```
-```dashboard:open-url
-url: https://simple-app-{{ session_namespace }}.cnr.{{ ENV_TAP_INGRESS }}
+And now that our **Simple App** is deployed. We can take a look at it here
+```dashboard:create-dashboard
+name: Hello World App!
+url: http://tanzu-java-web-app.{{ session_namespace }}.{{ ENV_TAP_INGRESS }}
 ```
 
 The following diagram (which is available in the documentation) of a similar ClusterDelivery shows the relationship between all those different resources.
 ![](../images/delivery.jpg)
 
-The detailed specifications of the Deliverable, ClusterDelivery, and ClusterDeploymentTemplate can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/deliverable/
+The detailed specifications of the Deliverable, ClusterDelivery, and ClusterDeploymentTemplate can be found here
+
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/deliverable/
 ```
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/template/#clusterdeploymenttemplate
+For additional information on `ClusterDeploymentTemplate` go here
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/template/#clusterdeploymenttemplate
 ```
 
 Now that you have a better understanding of how all the building blocks of Cartographer work, let's have a look what's out of the box with VMware Application Platform.

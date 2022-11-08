@@ -4,6 +4,7 @@ To standardize our application deployment to a fleet of clusters, we'll use **Gi
 With the GitOps approach, Git is used to version and store the necessary deployment configuration of our application configuration files as the single source of truth for infrastructure running in development, staging, production, etc. 
 
 Therefore, the last step of our Supply Chain is the push of the deployment configuration to Git repository. 
+
 ```editor:append-lines-to-file
 file: simple-supply-chain/supply-chain.yaml
 text: |2
@@ -20,13 +21,15 @@ text: |2
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/config-writer-template.yaml
+file: simple-supply-chain/simple-config-writer-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterTemplate
   metadata:
     name: simple-config-writer-template-{{ session_namespace }}
   spec:
+    healthRule:
+      singleConditionType: Ready
     ytt: ""
 ```
 
@@ -42,6 +45,7 @@ Tekton Pipelines defines the following entities:
 **TaskRuns** and **PipelineRuns** are immutable Kubernetes resources, and therefore, it's not possible to configure it in our ClusterTemplate, because it will try to update that immutable Kubernetes resource on every signal for an input change. 
 
 The detailed specifications of the ClusterTemplate can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/template/#clustertemplate
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/template/#clustertemplate
 ```
