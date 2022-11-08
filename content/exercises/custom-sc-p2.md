@@ -209,7 +209,7 @@ In addition to `kpack`, with our custom supply chain we want to provide a soluti
 
 Because there is **no official Kubernetes CRD** for it available, we will use **Tekton** to run it in a container.
 
-Let's first create the skeleton for our new `ClusterImageTemplate`. As you can se we also added an additional ytt function that generates the context sub-path out of the Git url and revision which we need for our custom implementation.
+Let's first create the skeleton for our new `ClusterImageTemplate`. As you can see we also added an additional ytt function that generates the context sub-path out of the Git url and revision which we need for our custom implementation.
 
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-image-kaniko-template.yaml
@@ -409,7 +409,6 @@ text: |2
           dockerfile: #@ data.values.params.dockerfile
           source-url: #@ data.values.sources.source.url
           source-revision: #@ data.values.sources.source.revision
-          source-subpath: #@ context_sub_path()
 ```
 
 Let's get the reference details of the image that we just built so that we can get the name of the image.
