@@ -144,6 +144,11 @@ text: |2
       templateRef:
         kind: ClusterSourceTemplate
         name: custom-source-provider-template-{{ session_namespace }}
+
+    #source-tester-TBC
+
+    #source-scanner-TBC
+
 ```
 
 With the `spec.resources[*].templateRef.options` field, it's also possible to define multiple templates of the same kind for one resource to change the implementation of a step based on a selector.

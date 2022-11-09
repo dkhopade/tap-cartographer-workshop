@@ -1,4 +1,5 @@
-#### Cluster Image Template
+## Cluster Image Template
+
 The details of ClusterImageTemplate specifications can be found here: 
 ```dashboard:reload-dashboard
 name: Cartographer Docs
@@ -11,6 +12,7 @@ We can consume the outputs of our ClusterSourceTemplate resource in the ClusterI
 ```editor:append-lines-to-file
 file: custom-supply-chain/supply-chain.yaml
 text: |2
+
     - name: image-builder
       templateRef:
         kind: ClusterImageTemplate
@@ -23,6 +25,11 @@ text: |2
         value:
           server: harbor.services.demo.jg-aws.com
           repository: tap-workshop-workloads
+    
+    #image-scanner-TBC
+
+    #config-provider-TBC
+    
 ```
 In addition, we also define parameters for the resource with the configuration of a registry server and repository to which we want to push our container images. As we are setting them with `params[*].value` instead of `params[*].default`, they are not overridable by the global ClusterSupplyChain resource's and the Workload params. 
 

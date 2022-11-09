@@ -8,6 +8,7 @@ Therefore, the last step of our Supply Chain is the push of the deployment confi
 ```editor:append-lines-to-file
 file: custom-supply-chain/supply-chain.yaml
 text: |2
+
     - name: config-writer
       templateRef:
         kind: ClusterTemplate
@@ -18,6 +19,7 @@ text: |2
       params:
       - name: git_repository
         value: {{ ENV_GITOPS_REPOSITORY }}
+
 ```
 
 ```editor:append-lines-to-file
