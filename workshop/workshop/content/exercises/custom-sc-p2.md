@@ -1135,6 +1135,134 @@ text: |2
         name: custom-deliverable-template-{{ session_namespace }}
 ```
 
+At this point, we need to tweak our `ClusterDelievery` template to use **RegistryOps** as oppose to what we used earlier as **GitOps**.
+For this, lets replace the `resources:` section. For `ClusterSourceTemplate`, we will re-use `custom-source-provider-template--{{ session_namespace }}` where we have both `GitRepository` & `ImageRepository` resources to choose from depending on workload `spec.source`.
+
+However, for deployment of this extended supply chain, we cannot re-use the already created `ClusterDeploymentTemplate`, so lets go ahead and create a new one that reconciles the label selectors that are used for this testing-scanning supply chain.
+
+```editor:append-lines-to-file
+file: custom-supply-chain/supply-chain.yaml
+text: |
+apiVersion: carto.run/v1alpha1
+kind: ClusterDeploymentTemplate
+metadata:
+  name: tanzu-java-web-app-deploy-{{ session_namespace }}
+spec:
+  healthRule:
+    multiMatch:
+      healthy:
+        matchConditions:
+        - status: "True"
+          type: ReconcileSucceeded
+      unhealthy:
+        matchFields:
+        - key: status.conditions[?(@.type=="ReconcileFailed")].status
+          messagePath: .status.usefulErrorMessage
+          operator: In
+          values:
+          - "True"
+  observedCompletion:
+    failed:
+      key: .status.conditions[?(@.type=="ReconcileSucceeded")].status
+      value: "False"
+    succeeded:
+      key: .status.conditions[?(@.type=="ReconcileSucceeded")].status
+      value: "True"
+  params:
+  - default: default
+    name: serviceAccount
+  ytt: |
+    #@ load("@ytt:data", "data")
+    #@ load("@ytt:assert", "assert")
+
+    #@ def merge_labels(fixed_values):
+    #@   labels = {}
+    #@   if hasattr(data.values.deliverable.metadata, "labels"):
+    #@     labels.update(data.values.deliverable.metadata.labels)
+    #@   end
+    #@   labels.update(fixed_values)
+    #@   return labels
+    #@ end
+
+    ---
+    apiVersion: kappctrl.k14s.io/v1alpha1
+    kind: App
+    metadata:
+      name: #@ data.values.deliverable.metadata.name
+      labels: #@ merge_labels({ "app.kubernetes.io/component": "deploy" })
+    spec:
+      syncPeriod: 10m0s
+      serviceAccountName: #@ data.values.params.serviceAccount
+      fetch:
+        - http:
+            url: #@ data.values.deployment.url or assert.fail("missing required deployment config url")
+            #@ if/end hasattr(data.values.params, "gitops_sub_path"):
+            subPath: #@ data.values.params.gitops_sub_path
+
+        - inline:
+            paths:
+              config.yml: |
+                ---
+                apiVersion: kapp.k14s.io/v1alpha1
+                kind: Config
+                rebaseRules:
+                  - path: [metadata, annotations, serving.knative.dev/creator]
+                    type: copy
+                    sources: [new, existing]
+                    resourceMatchers: &matchers
+                      - apiVersionKindMatcher: {apiVersion: serving.knative.dev/v1, kind: Service}
+                  - path: [metadata, annotations, serving.knative.dev/lastModifier]
+                    type: copy
+                    sources: [new, existing]
+                    resourceMatchers: *matchers
+      template:
+        - ytt: {}
+        - kbld: {}
+      deploy:
+        - kapp: {}
+
+```
+
+And now lets replace the `resources:` section to use the newly created `ClusterDeploymentTemplate` and existing `ClusterSourceTemplate`.
+```editor:select-matching-text
+file: custom-supply-chain/custom-delivery.yaml
+text: "  resources:"
+after: 10
+```
+```editor:replace-text-selection
+file: custom-supply-chain/custom-delivery.yaml
+text: |2
+    resources:
+    - name: source-provider
+      params:
+      - name: serviceAccount
+        value: default
+      - name: gitImplementation
+        value: go-git
+      templateRef:
+        kind: ClusterSourceTemplate
+        name: custom-source-provider-template--{{ session_namespace }}
+    - deployment:
+        resource: source-provider
+      name: deployer
+      params:
+      - name: serviceAccount
+        value: default
+      templateRef:
+        kind: ClusterDeploymentTemplate
+        name: tanzu-java-web-app-deploy-{{ session_namespace }}
+```
+Next is to add a label selector thats applicable for this complex custom supply chain that is needed for `Delieverable` to be picked by `ClusterDelievery`.
+
+```editor:select-matching-text
+file: custom-supply-chain/custom-delivery.yaml
+text: "   #app.tanzu.vmware.com/deliverable-type: web #uncomment this for complex flow"
+```
+```editor:replace-text-selection
+file: custom-supply-chain/custom-delivery.yaml
+text: |2
+    app.tanzu.vmware.com/deliverable-type: web
+```
 
 We are now able to apply our custom supply chain to the cluster.
 ```terminal:execute
