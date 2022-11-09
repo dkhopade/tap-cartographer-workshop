@@ -428,6 +428,7 @@ text: |2
     imagePath: .status.outputs.image-ref
 ```
 
+#### ClusterSourceTemplate - Image Scanning
 
 We also have a requirement to scan the container image that was produced in a previous build step. We need to create `ClusterImageTemplate` and add its reference as `image-scanner` to the supply chain.
 Lets understand what this section is. We are using a scan policy (`ScanPolicy`) named `lax-scan-policy` that was created as a custom policy thats different than what we have used on Source Scan earlier. Also, the scanning template (`ScanTemplate`) named `private-image-scan-template` is specific template to scan container images for container level CVEs via `scanning.apps.tanzu.vmware.com/v1beta1` that was already deployed on this workshop & the TAP cluster by OOTB supply chain. We can change the policies and templates with our custom ones. We will explain this more during the image scanning section when we add it to the supply chain.
@@ -491,8 +492,9 @@ text: |2
         name: custom-image-scanner-template-{{ session_namespace }}
 
 ```
-**TODO** This session uses the RegistryOps model. Our first session we used a GitOps model
-To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` that will create a new `PodIntent` object that will be consumed by TAP's **Conventions Service**
+#### ClusterConfigTemplate - Conventions Service
+
+This session uses the RegistryOps model. Our first session we used a GitOps model. To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` that will create a new `PodIntent` object that will be consumed by TAP's **Conventions Service**
 
 Step1: In this step we will add `ClusterConfigTemplate` for `PodIntent` and its reference to the Supply Chain.
 Lets add a template:
