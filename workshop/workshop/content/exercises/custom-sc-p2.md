@@ -21,24 +21,17 @@ text: |2
       apps.tanzu.vmware.com/workload-type: web
 ```
 
-**TODO:** Next we need to add the additional parameters 
+Next we need to add the additional parameters 
 
-
-```editor:append-lines-to-file
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  params:"
+```
+Add `selector` to Supply Chain.
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
-  apiVersion: carto.run/v1alpha1
-  kind: ClusterSupplyChain
-  metadata:
-    name: custom-supplychain-{{ session_namespace }}
-    labels:
-      apps.tanzu.vmware.com/workload-type: web
-      end2end.link/is-custom: "true"
-      end2end.link/workshop-session: {{ session_namespace }}
-  spec:
-    selector:
-      end2end.link/workshop-session: {{ session_namespace }}
-      end2end.link/is-custom: "true"
+
     params:
     - name: maven_repository_url
       value: https://repo.maven.apache.org/maven2
@@ -52,10 +45,8 @@ text: |2
       name: gitops_commit_message
     - default: ""
       name: gitops_ssh_secret  
-    resources: []
-```
 
-**TODO: Endo of params
+```
 
 As with the basic supply chains we just created, the **first task** for our custom supply chain is also to **provide the latest version of a source code in a Git repository for subsequent steps**.
 In the simple and ootb supply chains we used the [Flux](https://fluxcd.io) Source Controller for it. 

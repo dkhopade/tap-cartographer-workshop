@@ -14,6 +14,7 @@ text: |2
   metadata:
     name: custom-supplychain-{{ session_namespace }}
   spec:
+    params:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
     resources: []
