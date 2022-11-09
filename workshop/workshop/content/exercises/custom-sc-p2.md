@@ -1256,12 +1256,12 @@ Next is to add a label selector thats applicable for this complex custom supply 
 
 ```editor:select-matching-text
 file: custom-supply-chain/custom-delivery.yaml
-text: "   #app.tanzu.vmware.com/deliverable-type: web #uncomment this for complex flow"
+text: "  #app.tanzu.vmware.com/deliverable-type: web #uncomment this for complex flow"
 ```
 ```editor:replace-text-selection
 file: custom-supply-chain/custom-delivery.yaml
 text: |2
-      app.tanzu.vmware.com/deliverable-type: web
+    app.tanzu.vmware.com/deliverable-type: web
 ```
 
 We are now able to apply our custom supply chain to the cluster.
