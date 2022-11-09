@@ -1,14 +1,15 @@
+### Create a Deliverable
 With the deployment configuration of our application available in a Git repository, we are now able to deploy it automatically to a fleet of clusters on every change. 
+
 There are several tools for this job available, like ArgoCD or Carvel's kapp-controller.
 
-Cartographer also provides a way to define a continuous delivery workflow that e.g. picks up that configuration from the Git repository to be promoted through multiple environments to first test/validate and finally run in production via the **ClusterDelivery**.
+Cartographer also provides a way to define a continuous delivery workflow which e.g. picks up that configuration from the Git repository to be promoted through multiple environments to first test/validate and finally run in production via the `ClusterDelivery`.
 
-A **ClusterDelivery** is analogous to SupplyChain, in that it specifies a list of resources that are created when requested by the developer. Early resources in the delivery are expected to configure the k8s environment (for example, by deploying an application). Later resources validate the environment is healthy.
-A **ClusterDeploymentTemplate** indicates how the ClusterDelivery should configure the environment.
-A **Deliverable** allows the operator to pass information about the configuration to be applied to the environment to the ClusterDelivery.
+A `ClusterDelivery` is analogous to `SupplyChain`, in that it specifies a list of resources that are created when requested by the developer. Early resources in the delivery are expected to configure the k8s environment (for example, by deploying an application). Later resources validate the environment is healthy.
+A `ClusterDeploymentTemplate` indicates how the `ClusterDelivery` should configure the environment.
+A `Deliverable` allows the operator to pass information about the configuration to be applied to the environment to the `ClusterDelivery`.
 
-For the sake of simplicity, we will now deploy our application to the same cluster we used for building it.
-Let's first create a **Deliverable** resource to pass the required information to the ClusterDelivery. In this case, all is already available in the Workload and the ClusterSupplyChain parameters. Therefore, let's extend our Supply Chain to stamp out the Deliverable.
+For the sake of simplicity, we will now deploy our application in the same cluster that we use for building it. First, let's  create a `Deliverable` resource to pass the required information to the `ClusterDelivery`. In this case, all details are already available in the `Workload` and the `ClusterSupplyChain` parameters. Therefore, let's extend our Supply Chain to stamp out the `Deliverable`.
 ```editor:append-lines-to-file
 file: custom-supply-chain/supply-chain.yaml
 text: |2
@@ -45,7 +46,7 @@ text: |2
               branch: main
 ```
 
-We will now create our full ClusterDelivery and after that implement all the required Templates.
+We will now create our full `ClusterDelivery` and after that implement all the required Templates.
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-delivery.yaml
 text: |2
@@ -69,11 +70,11 @@ text: |2
       deployment:
         resource: source-provider
 ```
-As you can see, the configuration of the ClusterDeliveries looks similar to ClusterSupplychain. You can specify the type of Deliverable they accept through the `spec.selector`, `spec.selectorMatchExpressions`, and `selectorMatchFields` fields and all of the resources via `spec.resources`.
+As you can see, the configuration of the `ClusterDeliveries` looks similar to `ClusterSupplyChain`. You can specify the type of `Deliverable` they accept through the `spec.selector`, `spec.selectorMatchExpressions`, and `selectorMatchFields` fields and all of the resources via `spec.resources`.
 
-ClusterSourceTemplates and ClusterTemplates are valid for ClusterDelivery. It additionally has the resource ClusterDeploymentTemplates. Delivery can cast the values from a ClusterSourceTemplate so that they may be consumed by a ClusterDeploymentTemplate.
+`ClusterSourceTemplates` and `ClusterTemplates` are valid for `ClusterDelivery`. It additionally has the resource `ClusterDeploymentTemplates`. `Delivery` can cast the values from a `ClusterSourceTemplate` so that they may be consumed by a `ClusterDeploymentTemplate`.
 
-Like for the Supply Chain, we will use the [Flux](https://fluxcd.io) Source Controller to watch our GitOps repository for changes.
+As in the case of `ClusterSupplyChain`, we will use the [Flux](https://fluxcd.io) Source Controller to watch our GitOps repository for changes.
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-delivery-source-template.yaml
 text: |2
@@ -98,7 +99,7 @@ text: |2
           name: flux-basic-access-auth
 ```
 
-Let's now continue with the creation of the **ClusterDeploymentTemplate**.
+Let's now continue with the creation of the `ClusterDeploymentTemplate`.
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-deployment-template.yaml
 text: |2
@@ -148,7 +149,7 @@ text: |2
           - kapp: {}
 ```
 
-A **ClusterDeploymentTemplate** must specify criteria to determine whether the templated object has successfully completed its role in configuring the environment. Once the criteria are met, the ClusterDeploymentTemplate will output the deployment values. The criteria may be specified in `spec.observedMatches` or in `spec.observedCompletion`.
+A `ClusterDeploymentTemplate` must specify criteria to determine whether the templated object has successfully completed its role in configuring the environment. Once the criteria are met, the ClusterDeploymentTemplate will output the deployment values. The criteria may be specified in `spec.observedMatches` or in `spec.observedCompletion`.
 
 To fetch the latest deployment configuration from the url provided by the Flux Source Controller, we use Carvel's **kapp-controller**, which provides a declarative way to install, manage, and upgrade applications on a Kubernetes cluster using the **[App CRD](https://carvel.dev/kapp-controller/docs/v0.38.0/app-overview/)**.
 The App CR comprises of three main sections:
@@ -158,20 +159,24 @@ The App CR comprises of three main sections:
 
 We are using a Knative Serving Service for our deployment. This resource type has immutable creator/lastModifer annotations that will be created if the resource is applied the first time. If Cartographer or kapp-controller applies updates to the resource due to a new input it "removes" them which results in a request denial by the admission webhook. Therefore, that additional ConfigMap is added which instructs kapp-controller to copy them from the resources already running in the cluster.
 
-We are now able to apply our updated and new resources to the cluster ...
+We are now able to apply our updated and new resources to the cluster. We'll use kapp controller to help with resource deployment and management of our supply chain assets.
+
 ```terminal:execute
 command: kapp deploy -a custom-supply-chain -f custom-supply-chain -y --dangerous-scope-to-fallback-allowed-namespaces
 clear: true
 ```
-... and can check whether everything is working as expected and the deployed application is accessible.
+... and let's check whether everything is working as expected and the deployed application is accessible. We will start with `ClusterDelivery`
+
 ```terminal:execute
 command: kubectl describe ClusterDelivery custom-delivery-{{ session_namespace }}
 clear: true
 ```
+It takes a few seconds for kapp controller to implement the requests. Let's take a look at how we progress with this handy `kubectl` plugin. 
 ```terminal:execute
-command: kubectl tree deliverable tanzu-java-web-app
+command: watch "kubectl tree deliverable tanzu-java-web-app"
 clear: true
 ```
+
 ```terminal:execute
 command: kubectl describe deliverable tanzu-java-web-app
 clear: true
