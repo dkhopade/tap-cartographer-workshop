@@ -1146,7 +1146,7 @@ text: |2
     apiVersion: carto.run/v1alpha1
     kind: ClusterDeploymentTemplate
     metadata:
-      name: tanzu-java-web-app-deploy-{{ session_namespace }}
+      name: tanzu-java-web-app-deploy-complex-{{ session_namespace }}
     spec:
       healthRule:
         multiMatch:
@@ -1250,7 +1250,7 @@ text: |2
         value: default
       templateRef:
         kind: ClusterDeploymentTemplate
-        name: tanzu-java-web-app-deploy-{{ session_namespace }}
+        name: tanzu-java-web-app-deploy-complex-{{ session_namespace }}
 ```
 Next is to add a label selector thats applicable for this complex custom supply chain that is needed for `Delieverable` to be picked by `ClusterDelievery`.
 
