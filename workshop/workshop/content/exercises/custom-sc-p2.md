@@ -117,7 +117,13 @@ text: |2
           source-revision: #@ data.values.source.revision
 ```
 Add reference to Supply Chain.
-```editor:append-lines-to-file
+
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  #source-tester-TBC"
+```
+
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
@@ -128,6 +134,7 @@ text: |2
       templateRef:
         kind: ClusterSourceTemplate
         name: custom-source-tester-template-{{ session_namespace }}
+
 ```
 #### ClusterSourceTemplate - Source Scanning
 
@@ -174,7 +181,12 @@ text: |2
         scanPolicy: #@ data.values.params.scanning_source_policy
 ```
 Lets add a reference to the Supply Chain.
-```editor:append-lines-to-file
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  #source-scanner-TBC"
+```
+
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
@@ -304,8 +316,6 @@ text: |2
       - name: dockerfile
         default: ""
 ```
-
-**TODO** Why is the registry `server` value hardcoded above?
 
 This is possible via the `spec.resources[*].templateRef.options`. The documentation is available here:
 ```dashboard:reload-dashboard
@@ -456,14 +466,18 @@ text: |2
         scanPolicy: #@ data.values.params.scanning_image_policy
 ```
 Lets add a reference to the Supply Chain.
-```editor:append-lines-to-file
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  #image-scanner-TBC"
+```
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
-    - images:
+    - name: image-scanner
+      images:
       - name: image
         resource: image-builder
-      name: image-scanner
       params:
       - default: lax-scan-policy
         name: scanning_image_policy
@@ -472,6 +486,7 @@ text: |2
       templateRef:
         kind: ClusterImageTemplate
         name: custom-image-scanner-template-{{ session_namespace }}
+
 ```
 **TODO** This sescion uses the RegistryOps model. Our first session we used a GitOps model
 To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` that will create a new `PodIntent` object that will be consumed by TAP's **Conventions Service**
@@ -479,12 +494,12 @@ To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` th
 Step1: In this step we will add `ClusterConfigTemplate` for `PodIntent` and its reference to the Supply Chain.
 Lets add a template:
 ```editor:append-lines-to-file
-file: custom-supply-chain/custom-config-provider-template.yaml
+file: custom-supply-chain/custom-convention-template.yaml
 text: |2
     apiVersion: carto.run/v1alpha1
     kind: ClusterConfigTemplate
     metadata:
-      name: custom-config-provider-template-{{ session_namespace }}
+      name: custom-convention-template-{{ session_namespace }}
     spec:
       configPath: .status.template
       healthRule:
@@ -567,20 +582,24 @@ text: |2
                   resources: #@ data.values.workload.spec["resources"]
 ```
 Now add the reference to the supply chain:
-```editor:append-lines-to-file
+```editor:select-matching-text
+file: custom-supply-chain/supply-chain.yaml
+text: "  #config-provider-TBC"
+```
+```editor:replace-text-selection
 file: custom-supply-chain/supply-chain.yaml
 text: |2
 
-    - images:
+    - name: config-provider
+      images:
       - name: image
         resource: image-scanner
-      name: config-provider
       params:
       - name: serviceAccount
         value: default
       templateRef:
         kind: ClusterConfigTemplate
-        name: custom-config-provider-template-{{ session_namespace }}
+        name: custom-convention-template-{{ session_namespace }}
 ```
 
 
