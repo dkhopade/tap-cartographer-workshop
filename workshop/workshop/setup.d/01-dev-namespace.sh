@@ -6,9 +6,6 @@ REGISTRY_PASSWORD=$CONTAINER_REGISTRY_PASSWORD kp secret create registry-credent
 REGISTRY_PASSWORD=$CONTAINER_REGISTRY_PASSWORD kp secret create tap-registry --registry ${CONTAINER_REGISTRY_HOSTNAME} --registry-user ${CONTAINER_REGISTRY_USERNAME}
 kubectl patch serviceaccount default -p '{"imagePullSecrets": [{"name": "registry-credentials"}, {"name": "tanzu-net-credentials"}, {"name": "tap-registry"}]}'
 
-# TODO: Is this needed?
-# git clone https://github.com/mrgaryg/tap-cartographer-workshop.git
-
 kubectl apply -f https://raw.githubusercontent.com/tektoncd/catalog/main/task/git-cli/0.3/git-cli.yaml
 
 git_hostname=$(echo $GITOPS_REPOSITORY | grep -oP '(?<=http://).*?(?=/)')
