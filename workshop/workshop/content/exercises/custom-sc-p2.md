@@ -25,7 +25,7 @@ Next we need to add the additional parameters
 
 ```editor:select-matching-text
 file: custom-supply-chain/supply-chain.yaml
-text: "  params:"
+text: "  params: []"
 ```
 Add `selector` to Supply Chain.
 ```editor:replace-text-selection
