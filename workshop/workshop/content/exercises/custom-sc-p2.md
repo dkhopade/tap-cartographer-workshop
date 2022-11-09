@@ -488,7 +488,7 @@ text: |2
         name: custom-image-scanner-template-{{ session_namespace }}
 
 ```
-**TODO** This sescion uses the RegistryOps model. Our first session we used a GitOps model
+**TODO** This session uses the RegistryOps model. Our first session we used a GitOps model
 To proceed with using the RegistryOps model let's add `ClusterConfigTemplate` that will create a new `PodIntent` object that will be consumed by TAP's **Conventions Service**
 
 Step1: In this step we will add `ClusterConfigTemplate` for `PodIntent` and its reference to the Supply Chain.
