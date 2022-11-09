@@ -1241,7 +1241,7 @@ text: |2
         value: go-git
       templateRef:
         kind: ClusterSourceTemplate
-        name: custom-source-provider-template--{{ session_namespace }}
+        name: custom-source-provider-template-{{ session_namespace }}
     - deployment:
         resource: source-provider
       name: deployer
