@@ -400,6 +400,9 @@ text: |2
       kind: Runnable
       metadata:
         name: #@ data.values.workload.metadata.name + "-kaniko"
+        labels:
+          app.kubernetes.io/component: image
+          app.kubernetes.io/part-of: #@ data.values.workload.metadata.name
       spec:
         runTemplateRef:
           name: custom-kaniko-run-template-{{ session_namespace }}
