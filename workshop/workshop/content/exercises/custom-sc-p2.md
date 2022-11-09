@@ -1261,7 +1261,7 @@ text: "   #app.tanzu.vmware.com/deliverable-type: web #uncomment this for comple
 ```editor:replace-text-selection
 file: custom-supply-chain/custom-delivery.yaml
 text: |2
-    app.tanzu.vmware.com/deliverable-type: web
+      app.tanzu.vmware.com/deliverable-type: web
 ```
 
 We are now able to apply our custom supply chain to the cluster.
