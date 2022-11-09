@@ -1141,7 +1141,7 @@ For this, lets replace the `resources:` section. For `ClusterSourceTemplate`, we
 However, for deployment of this extended supply chain, we cannot re-use the already created `ClusterDeploymentTemplate`, so lets go ahead and create a new one that reconciles the label selectors that are used for this testing-scanning supply chain.
 
 ```editor:append-lines-to-file
-file: custom-supply-chain/supply-chain.yaml
+file: custom-supply-chain/custom-deployment-template-complex.yaml
 text: |
 apiVersion: carto.run/v1alpha1
 kind: ClusterDeploymentTemplate
