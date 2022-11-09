@@ -57,7 +57,7 @@ text: |2
   spec:
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
-      app.tanzu.vmware.com/deliverable-type: web
+      #app.tanzu.vmware.com/deliverable-type: web #uncomment this for complex flow
     resources:
     - name: source-provider
       templateRef:
