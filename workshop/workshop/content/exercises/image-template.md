@@ -8,30 +8,6 @@ url: https://cartographer.sh/docs/v0.4.0/reference/template/#clusterimagetemplat
 A **ClusterImageTemplate** instructs how the supply chain should instantiate an object responsible for supplying container images.
 
 Sounds like a perfect match for our second step in the path to production - the building of a container image out of the provided source code by the first step. 
-We can consume the outputs of our ClusterSourceTemplate resource in the ClusterImageTemplate by referencing it via the `spec.resources[*].sources` field of our Supply Chain definition. 
-```editor:append-lines-to-file
-file: custom-supply-chain/supply-chain.yaml
-text: |2
-
-    - name: image-builder
-      templateRef:
-        kind: ClusterImageTemplate
-        name: custom-image-kpack-template-{{ session_namespace }}
-      sources:
-      - name: source
-        resource: source-provider
-      params:
-      - name: registry
-        value:
-          server: harbor.services.demo.jg-aws.com
-          repository: tap-workshop-workloads
-    
-    #image-scanner-TBC
-
-    #config-provider-TBC
-    
-```
-In addition, we also define parameters for the resource with the configuration of a registry server and repository to which we want to push our container images. As we are setting them with `params[*].value` instead of `params[*].default`, they are not overridable by the global ClusterSupplyChain resource's and the Workload params. 
 
 With all the data we need, we can configure our ClusterImageTemplate resource.
 ```editor:append-lines-to-file
@@ -105,3 +81,29 @@ text: |2
 We are using a **ytt** function to construct the tag of the container image. We are also using the data values, the parameters, and the source input as defined in our **Workload**.
 
 When an image resource has successfully built with its current configuration and pushed to the container registry, the custom report will report the up-to-date, fully qualified built OCI image reference in the `status.latestImage`, which we can use as the output of our Template specified in jsonpath.
+
+We can consume the outputs of our `ClusterSourceTemplate` resource (that we created in an earlier step) in the `ClusterImageTemplate` by referencing it via the `spec.resources[*].sources` field of our Supply Chain definition.
+Let's add this as a resource/reference to our supply chain:
+```editor:append-lines-to-file
+file: custom-supply-chain/supply-chain.yaml
+text: |2
+
+    - name: image-builder
+      templateRef:
+        kind: ClusterImageTemplate
+        name: custom-image-kpack-template-{{ session_namespace }}
+      sources:
+      - name: source
+        resource: source-provider
+      params:
+      - name: registry
+        value:
+          server: harbor.services.demo.jg-aws.com
+          repository: tap-workshop-workloads
+    
+    #image-scanner-TBC
+
+    #config-provider-TBC
+    
+```
+In addition, we also define parameters for the resource with the configuration of a registry server and repository to which we want to push our container images. As we are setting them with `params[*].value` instead of `params[*].default`, they are not overridable by the global ClusterSupplyChain resource's and the Workload params. 

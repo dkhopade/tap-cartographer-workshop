@@ -9,19 +9,6 @@ A `ClusterDelivery` is analogous to `SupplyChain`, in that it specifies a list o
 A `ClusterDeploymentTemplate` indicates how the `ClusterDelivery` should configure the environment.
 A `Deliverable` allows the operator to pass information about the configuration to be applied to the environment to the `ClusterDelivery`.
 
-For the sake of simplicity, we will now deploy our application in the same cluster that we use for building it. First, let's  create a `Deliverable` resource to pass the required information to the `ClusterDelivery`. In this case, all details are already available in the `Workload` and the `ClusterSupplyChain` parameters. Therefore, let's extend our Supply Chain to stamp out the `Deliverable`.
-```editor:append-lines-to-file
-file: custom-supply-chain/supply-chain.yaml
-text: |2
-    - name: deliverable
-      templateRef:
-        kind: ClusterTemplate
-        name: custom-deliverable-template-{{ session_namespace }}
-      params:
-      - name: gitops_repository
-        value: {{ ENV_GITOPS_REPOSITORY}}
-```
-
 ```editor:append-lines-to-file
 file: custom-supply-chain/custom-deliverable-template.yaml
 text: |2
@@ -147,6 +134,20 @@ text: |2
           - ytt: {}
         deploy:
           - kapp: {}
+```
+
+For the sake of simplicity, we will now deploy our application in the same cluster that we use for building it. First, let's  create a `Deliverable` resource to pass the required information to the `ClusterDelivery`. In this case, all details are already available in the `Workload` and the `ClusterSupplyChain` parameters. Therefore, let's extend our Supply Chain to stamp out the `Deliverable`.
+Let's add this as a resource/reference to our supply chain:
+```editor:append-lines-to-file
+file: custom-supply-chain/supply-chain.yaml
+text: |2
+    - name: deliverable
+      templateRef:
+        kind: ClusterTemplate
+        name: custom-deliverable-template-{{ session_namespace }}
+      params:
+      - name: gitops_repository
+        value: {{ ENV_GITOPS_REPOSITORY}}
 ```
 
 A `ClusterDeploymentTemplate` must specify criteria to determine whether the templated object has successfully completed its role in configuring the environment. Once the criteria are met, the ClusterDeploymentTemplate will output the deployment values. The criteria may be specified in `spec.observedMatches` or in `spec.observedCompletion`.
