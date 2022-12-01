@@ -167,19 +167,19 @@ spec:
 EOF
 
 # Deploy sample workload through testing and scanning supply chain
-cat << EOF | kubectl apply -f -
-apiVersion: carto.run/v1alpha1
-kind: Workload
-metadata:
-  labels:
-    app.kubernetes.io/part-of: ootb-sc-demo
-    apps.tanzu.vmware.com/has-tests: "true"
-    apps.tanzu.vmware.com/workload-type: web
-  name: ootb-sc-demo
-spec:
-  source:
-    git:
-      ref:
-        branch: main
-      url: https://github.com/mrgaryg/spring-boot-hello-world.git
-EOF
+# cat << EOF | kubectl apply -f -
+# apiVersion: carto.run/v1alpha1
+# kind: Workload
+# metadata:
+#   labels:
+#     app.kubernetes.io/part-of: ootb-sc-demo
+#     apps.tanzu.vmware.com/has-tests: "true"
+#     apps.tanzu.vmware.com/workload-type: web
+#   name: ootb-sc-demo
+# spec:
+#   source:
+#     git:
+#       ref:
+#         branch: main
+#       url: https://github.com/mrgaryg/spring-boot-hello-world.git
+# EOF
