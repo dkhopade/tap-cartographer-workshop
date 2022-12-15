@@ -25,9 +25,33 @@ modules:
         exit_sign: Delivery
     exercises/delivery:
         name: Deliverable, ClusterDelivery, ClusterDeploymentTemplate
-        exit_sign: Add Testing and Scanning
-    exercises/custom-sc-p2:
-        name: Customize OOTB Supply Chain
+        exit_sign: Customize OOTB Supply Chain with Testing-Scanning
+    exercises/test-scan-start:
+        name: Customize OOTB Supply Chain with Testing-Scanning
+        exit_sign: Add Source Testing
+    exercises/test-scan-source-testing:
+        name: Add Source Testing
+        exit_sign: Add Source Scanning
+    exercises/test-scan-source-scanning:
+        name: Add Source Scanning
+        exit_sign: Image Building with Kaniko
+    exercises/test-scan-img-build-kaniko:
+        name: Image Building with Kaniko
+        exit_sign: Image Scanning
+    exercises/test-scan-image-scanning:
+        name: Image Scanning
+        exit_sign: Adding Convention Services
+    exercises/test-scan-conv-service:
+        name: Adding Convention Services
+        exit_sign: GitOps vs RegistryOps
+    exercises/test-scan-gitops-regops:
+        name: GitOps vs RegistryOps
+        exit_sign: Adding Delivery
+    exercises/test-scan-delivery:
+        name: Adding Delivery
+        exit_sign: Lets Deploy Workload
+    exercises/test-scan-deploy-workload:
+        name: Lets Deploy Workload
         exit_sign: Summary
     workshop-summary:
         name: Workshop Summary
