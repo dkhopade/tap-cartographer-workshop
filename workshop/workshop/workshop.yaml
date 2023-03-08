@@ -11,6 +11,13 @@ modules:
     - exercises/template
     - exercises/runnable
     - exercises/delivery
-    - exercises/sc-ootb
-    - exercises/custom-sc
+    - exercises/test-scan-start
+    - exercises/test-scan-source-testing
+    - exercises/test-scan-source-scanning
+    - exercises/test-scan-img-build-kaniko
+    - exercises/test-scan-image-scanning
+    - exercises/test-scan-conv-service
+    - exercises/test-scan-gitops-regops
+    - exercises/test-scan-delivery
+    - exercises/test-scan-deploy-workload
     - workshop-summary

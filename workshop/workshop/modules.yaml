@@ -1,6 +1,6 @@
 modules:
     workshop-overview:
-        name: Easily build Cloud Native Supply Chains
+        name: Easily Build Cloud Native Supply Chains
         exit_sign: Supply Chain
     exercises/supply-chain:
         name: ClusterSupplyChain
@@ -25,12 +25,33 @@ modules:
         exit_sign: Delivery
     exercises/delivery:
         name: Deliverable, ClusterDelivery, ClusterDeploymentTemplate
-        exit_sign: OOTB SCs
-    exercises/sc-ootb:
-        name: Out of the Box Supply Chains
-        exit_sign: Custom SC
-    exercises/custom-sc:
-        name: Building a custom Supply Chain
+        exit_sign: Customize OOTB Supply Chain with Testing-Scanning
+    exercises/test-scan-start:
+        name: Customize OOTB Supply Chain with Testing-Scanning
+        exit_sign: Add Source Testing
+    exercises/test-scan-source-testing:
+        name: Add Source Testing
+        exit_sign: Add Source Scanning
+    exercises/test-scan-source-scanning:
+        name: Add Source Scanning
+        exit_sign: Image Building with Kaniko
+    exercises/test-scan-img-build-kaniko:
+        name: Image Building with Kaniko
+        exit_sign: Image Scanning
+    exercises/test-scan-image-scanning:
+        name: Image Scanning
+        exit_sign: Adding Convention Services
+    exercises/test-scan-conv-service:
+        name: Adding Convention Services
+        exit_sign: GitOps vs RegistryOps
+    exercises/test-scan-gitops-regops:
+        name: GitOps vs RegistryOps
+        exit_sign: Adding Delivery
+    exercises/test-scan-delivery:
+        name: Adding Delivery
+        exit_sign: Lets Deploy Workload
+    exercises/test-scan-deploy-workload:
+        name: Lets Deploy Workload
         exit_sign: Summary
     workshop-summary:
         name: Workshop Summary

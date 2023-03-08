@@ -3,17 +3,18 @@ Cartographer uses the **ClusterSupplyChain** custom resource to link the differe
 App operators can describe which "shape of applications" they deal with (via e.g. `spec.selector`) and what series of resources are responsible for creating an artifact that delivers it (via `spec.resources`).
 
 ```terminal:execute
-command: mkdir simple-supply-chain
+command: mkdir custom-supply-chain
 ```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
+file: custom-supply-chain/supply-chain.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterSupplyChain
   metadata:
-    name: simple-supplychain-{{ session_namespace }}
+    name: custom-supplychain-{{ session_namespace }}
   spec:
+    params: []
     selector:
       end2end.link/workshop-session: {{ session_namespace }}
     resources: []
@@ -29,8 +30,9 @@ A `.spec.serviceAccountRef` configuration refers to the Service account with per
 Additional parameters can be configured with `.spec.params`. They follow a hierarchy and default values (`.spec.params[*].default`) can be overriden by the Workload in constrast to those set with `.spec.params[*].value`.  
 
 The detailed specification can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/workload/#clustersupplychain
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/workload/#clustersupplychain
 ```
 
 ###### Templates

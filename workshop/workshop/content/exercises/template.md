@@ -4,29 +4,17 @@ To standardize our application deployment to a fleet of clusters, we'll use **Gi
 With the GitOps approach, Git is used to version and store the necessary deployment configuration of our application configuration files as the single source of truth for infrastructure running in development, staging, production, etc. 
 
 Therefore, the last step of our Supply Chain is the push of the deployment configuration to Git repository. 
-```editor:append-lines-to-file
-file: simple-supply-chain/supply-chain.yaml
-text: |2
-    - name: config-writer
-      templateRef:
-        kind: ClusterTemplate
-        name: simple-config-writer-template-{{ session_namespace }}
-      configs:
-      - resource: app-config
-        name: config
-      params:
-      - name: git_repository
-        value: {{ ENV_GITOPS_REPOSITORY }}
-```
 
 ```editor:append-lines-to-file
-file: simple-supply-chain/config-writer-template.yaml
+file: custom-supply-chain/custom-config-writer-template.yaml
 text: |2
   apiVersion: carto.run/v1alpha1
   kind: ClusterTemplate
   metadata:
-    name: simple-config-writer-template-{{ session_namespace }}
+    name: custom-config-writer-template-{{ session_namespace }}
   spec:
+    healthRule:
+      singleConditionType: Ready
     ytt: ""
 ```
 
@@ -41,7 +29,26 @@ Tekton Pipelines defines the following entities:
 
 **TaskRuns** and **PipelineRuns** are immutable Kubernetes resources, and therefore, it's not possible to configure it in our ClusterTemplate, because it will try to update that immutable Kubernetes resource on every signal for an input change. 
 
+Let's add this as a resource/reference to our supply chain:
+```editor:append-lines-to-file
+file: custom-supply-chain/supply-chain.yaml
+text: |2
+
+    - name: config-writer
+      templateRef:
+        kind: ClusterTemplate
+        name: custom-config-writer-template-{{ session_namespace }}
+      configs:
+      - resource: app-config
+        name: config
+      params:
+      - name: git_repository
+        value: {{ ENV_GITOPS_REPOSITORY }}
+
+```
+
 The detailed specifications of the ClusterTemplate can be found here: 
-```dashboard:open-url
-url: https://cartographer.sh/docs/v0.3.0/reference/template/#clustertemplate
+```dashboard:reload-dashboard
+name: Cartographer Docs
+url: https://cartographer.sh/docs/v0.4.0/reference/template/#clustertemplate
 ```
