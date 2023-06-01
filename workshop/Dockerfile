@@ -4,11 +4,13 @@ FROM registry.tanzu.vmware.com/tanzu-application-platform/tap-packages@sha256:a8
 USER root
 
 # Tanzu CLI
-COPY tanzu-framework-linux-amd64.tar /tmp
+COPY tanzu-framework-linux-amd64-v0.28.1.1.tar /tmp
 RUN export TANZU_CLI_NO_INIT=true
-RUN cd /tmp && tar -xvf "tanzu-framework-linux-amd64.tar" -C /tmp && \ 
-    sudo install "cli/core/v0.11.6/tanzu-core-linux_amd64" /usr/local/bin/tanzu && \ 
+RUN cd /tmp && tar -xvf "tanzu-framework-linux-amd64-v0.28.1.1.tar" -C /tmp && \ 
+    sudo install "cli/core/v0.28.1/tanzu-core-linux_amd64" /usr/local/bin/tanzu && \ 
     tanzu plugin install --local cli all
+RUN chmod 755 /usr/local/bin/tanzu
+RUN chmod -R 755 .config/tanzu
 
 # Knative
 RUN curl -L -o /usr/local/bin/kn https://github.com/knative/client/releases/download/knative-v1.4.1/kn-linux-amd64 && \
@@ -51,4 +53,4 @@ RUN rm -rf /tmp/*
 USER 1001
 COPY --chown=1001:0 . /home/eduk8s/
 RUN fix-permissions /home/eduk8s
-RUN rm /home/eduk8s/tanzu-framework-linux-amd64.tar
+RUN rm /home/eduk8s/tanzu-framework-linux-amd64-v0.28.1.1.tar

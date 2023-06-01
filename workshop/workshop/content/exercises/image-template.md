@@ -98,7 +98,7 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.services.demo.jg-aws.com
+          server: dktapdemo.azurecr.io
           repository: tap-workshop-workloads
     
     #image-scanner-TBC

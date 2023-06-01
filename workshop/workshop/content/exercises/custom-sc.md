@@ -191,7 +191,7 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.services.demo.jg-aws.com
+          server: dktapdemo.azurecr.io
           repository: tap-workshop-workloads
 ```
 This is possible via the `spec.resources[*].templateRef.options`. The documentation is available here:
@@ -297,7 +297,7 @@ text: |2
       params:
       - name: registry
         value:
-          server: harbor.services.demo.jg-aws.com
+          server: dktapdemo.azurecr.io
           repository: tap-workshop-workloads
       - name: dockerfile
         default: ""

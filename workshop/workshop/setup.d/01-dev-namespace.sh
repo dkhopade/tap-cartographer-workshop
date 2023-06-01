@@ -33,14 +33,27 @@ EOF
 
 # Create Flux Secret for GitOps repo
 # We use Gitea for GitOps repo
+#cat <<EOF | kubectl apply -f -
+#kind: Secret
+#apiVersion: v1
+#metadata:
+#  name: flux-basic-access-auth
+#data:
+#  username: $(echo $GITOPS_REPOSITORY_USERNAME | base64)
+#  password: $(echo $GITOPS_REPOSITORY_PASSWORD | base64)
+#EOF
+
 cat <<EOF | kubectl apply -f -
 kind: Secret
 apiVersion: v1
 metadata:
   name: flux-basic-access-auth
-data:
-  username: $(echo $GITOPS_REPOSITORY_USERNAME | base64)
-  password: $(echo $GITOPS_REPOSITORY_PASSWORD | base64)
+  annotations:
+    tekton.dev/git-0: http://gitea.kubecorn.com
+type: kubernetes.io/basic-auth
+stringData:
+  username: $GITOPS_REPOSITORY_USERNAME
+  password: $GITOPS_REPOSITORY_PASSWORD
 EOF
 
 # Create a custom Tekton Pipeline to for code scanning
