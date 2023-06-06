@@ -1,3 +1,6 @@
+#@ load("@ytt:data", "data")
+#@ load("@ytt:base64", "base64")
+#@ load("@ytt:json", "json")
 apiVersion: learningcenter.tanzu.vmware.com/v1beta1
 kind: Workshop
 metadata:
@@ -190,6 +193,115 @@ spec:
             namespace: $(session_namespace)
       #! Permissions for workshop session
       - apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          labels:
+            kubernetes.io/bootstrapping: rbac-defaults
+          name: scc-cluster-admin
+        rules:
+        # - apiGroups:
+        #   - '*'
+        #   resources:
+        #   - '*'
+        #   verbs:
+        #   - '*'
+        # - nonResourceURLs:
+        #   - '*'
+        #   verbs:
+        #   - '*'
+        - apiGroups:
+          - source.toolkit.fluxcd.io
+          resources:
+          - gitrepositories
+          verbs:
+          - '*'
+        - apiGroups:
+          - source.apps.tanzu.vmware.com
+          resources:
+          - imagerepositories
+          verbs:
+          - '*'
+        - apiGroups:
+          - carto.run
+          resources:
+          - deliverables
+          - runnables
+          - workload
+          verbs:
+          - '*'
+        - apiGroups:
+          - kpack.io
+          resources:
+          - images
+          - builds
+          verbs:
+          - '*'
+        - apiGroups:
+          - conventions.apps.tanzu.vmware.com
+          resources:
+          - podintents
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - '*'
+        - apiGroups:
+          - ""
+          resources:
+          - pods
+          verbs:
+          - list
+        - apiGroups:
+          - tekton.dev
+          resources:
+          - taskruns
+          - pipelineruns
+          - tasks
+          verbs:
+          - '*'
+        - apiGroups:
+          - tekton.dev
+          resources:
+          - pipelines
+          verbs:
+          - list
+        - apiGroups:
+          - kappctrl.k14s.io
+          resources:
+          - apps
+          verbs:
+          - '*'
+        - apiGroups:
+          - serving.knative.dev
+          resources:
+          - services
+          verbs:
+          - '*'
+        - apiGroups:
+          - servicebinding.io
+          resources:
+          - servicebindings
+          verbs:
+          - '*'
+        - apiGroups:
+          - services.apps.tanzu.vmware.com
+          resources:
+          - resourceclaims
+          verbs:
+          - '*'
+        - apiGroups:
+          - scanning.apps.tanzu.vmware.com
+          resources:
+          - imagescans
+          - sourcescans
+          verbs:
+          - '*'
+
+
+      - apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
         metadata:
           name: $(session_namespace)-session-crb
@@ -197,7 +309,7 @@ spec:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
-          name: cluster-admin
+          name: scc-cluster-admin #cluster-admin
         subjects:
           - kind: ServiceAccount
             namespace: $(workshop_namespace)
@@ -211,7 +323,7 @@ spec:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
-          name: cluster-admin
+          name: scc-cluster-admin #cluster-admin
         subjects:
           - kind: ServiceAccount
             namespace: $(session_namespace)
