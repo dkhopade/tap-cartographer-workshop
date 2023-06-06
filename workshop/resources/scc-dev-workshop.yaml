@@ -226,7 +226,7 @@ spec:
           resources:
           - deliverables
           - runnables
-          - workload
+          - workloads
           verbs:
           - '*'
         - apiGroups:
