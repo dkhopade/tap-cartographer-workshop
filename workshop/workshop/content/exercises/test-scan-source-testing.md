@@ -50,8 +50,11 @@ text: |2
             apps.tanzu.vmware.com/pipeline: test
 
         inputs:
-          source-url: #@ data.values.source.url
-          source-revision: #@ data.values.source.revision
+          tekton-params:
+          - name: source-url
+            value: #@ data.values.source.url
+          - name: source-revision
+            value: #@ data.values.source.revision
 ```
 Add reference to Supply Chain.
 
