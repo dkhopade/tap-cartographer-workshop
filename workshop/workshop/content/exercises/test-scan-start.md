@@ -17,7 +17,7 @@ Add `selector` to Supply Chain.
 file: custom-supply-chain/supply-chain.yaml
 text: |2
     selector:
-      apps.tanzu.vmware.com/has-tests: "true"ß
+      apps.tanzu.vmware.com/has-tests: "true"
       apps.tanzu.vmware.com/workload-type: web
 ```
 
