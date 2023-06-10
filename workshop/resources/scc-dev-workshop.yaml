@@ -199,16 +199,6 @@ spec:
             kubernetes.io/bootstrapping: rbac-defaults
           name: scc-cluster-admin
         rules:
-        # - apiGroups:
-        #   - '*'
-        #   resources:
-        #   - '*'
-        #   verbs:
-        #   - '*'
-        # - nonResourceURLs:
-        #   - '*'
-        #   verbs:
-        #   - '*'
         - apiGroups:
           - source.toolkit.fluxcd.io
           resources:
@@ -299,7 +289,19 @@ spec:
           - sourcescans
           verbs:
           - '*'
-
+    
+      - apiVersion: v1
+        imagePullSecrets:
+        - name: registry-credentials
+        - name: tanzu-net-credentials
+        - name: tap-registry
+        kind: ServiceAccount
+        metadata:
+          name: scc-workshop-sa
+          namespace: $(session_namespace)
+        secrets:
+        - name: registry-credentials
+        - name: tap-registry
 
       - apiVersion: rbac.authorization.k8s.io/v1
         kind: RoleBinding
@@ -309,7 +311,7 @@ spec:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
-          name: scc-cluster-admin #cluster-admin
+          name: cluster-admin
         subjects:
           - kind: ServiceAccount
             namespace: $(workshop_namespace)
@@ -323,11 +325,11 @@ spec:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
-          name: scc-cluster-admin #cluster-admin
+          name: cluster-admin
         subjects:
           - kind: ServiceAccount
             namespace: $(session_namespace)
-            name: default
+            name: scc-workshop-sa
 
       #! Install grype
       - apiVersion: packaging.carvel.dev/v1alpha1
